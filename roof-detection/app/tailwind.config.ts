@@ -19,6 +19,12 @@ const config: Config = {
         "secondary-text": "#4A4949",
         "light-gray": "#D4D4D4",
       },
+      fontSize: {
+        h1: "2.5rem",
+        h2: "1.875rem",
+        h3: "1.25rem",
+        small: "0.875rem",
+      },
     },
   },
   plugins: [],
