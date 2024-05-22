@@ -1,13 +1,13 @@
-train: ../train/images
-val: ../valid/images
-test: ../test/images
+train: C:\Users\thiba\Documents\School\2 MCT\2_IndustryProject\Industry-Project-Claerhout\roof-detection\train\images
+val: C:\Users\thiba\Documents\School\2 MCT\2_IndustryProject\Industry-Project-Claerhout\roof-detection\valid\images
+test: C:\Users\thiba\Documents\School\2 MCT\2_IndustryProject\Industry-Project-Claerhout\roof-detection\test\images
 
-nc: 2
-names: ['flat', 'sloped']
+nc: 1
+names: ["flat_roofs"]
 
 roboflow:
-  workspace: industryprojectroofdetection
-  project: roof-detection-k4b3f
-  version: 2
+  workspace: flat-roofs-48jmq
+  project: flat-roofs-afqvv
+  version: 1
   license: CC BY 4.0
-  url: https://universe.roboflow.com/industryprojectroofdetection/roof-detection-k4b3f/dataset/2
+  url: https://universe.roboflow.com/flat-roofs-48jmq/flat-roofs-afqvv/dataset/1
