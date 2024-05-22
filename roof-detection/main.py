@@ -3,22 +3,37 @@ from ultralytics import YOLO
 import numpy as np
 import cv2
 import glob
+import torch
 
 app = FastAPI()
 
 model = YOLO("./model/best.pt")
+image_directory = "./test-images/"
+flat_results = None
+results = None
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+@app.get("/results/flat/")
+async def get_flat_results():
+    global flat_results
+    images = glob.glob(image_directory + "*.jpg")
+    flat_results = model(images, classes=[0],retina_masks=True)
+    return "Results are ready"
+
+@app.get("/results/")
+async def get_results():
+    global results
+    images = glob.glob(image_directory + "*.jpg")
+    results = model(images,retina_masks=True)
+    return "Results are ready"
+
 @app.get("/perimeter/")
 async def get_permiter():
-    directory = "./test-images/"
-    images = glob.glob(directory + "*.jpg")
-    results = model(images, classes=[0], retina_masks=True)
     perimeters = []
-    for result in results:
+    for result in flat_results:
         if(result.masks is not None):
             masks_cpu = result.masks.cpu()
             masks_numpy = masks_cpu.data.numpy()
@@ -40,11 +55,8 @@ async def get_permiter():
 
 @app.get("/surface-area/")
 async def get_surface_area():
-    directory = "./test-images/"
-    images = glob.glob(directory + "*.jpg")
-    results = model(images, classes=[0], retina_masks=True)
     surface_areas = []
-    for result in results:
+    for result in flat_results:
         if(result.masks is not None):
             masks_cpu = result.masks.cpu()
             masks_numpy = masks_cpu.data.numpy()
@@ -65,7 +77,42 @@ async def get_surface_area():
 
 @app.get("/ratio/")
 async def get_ratio():
-    pass
+    flat_area = 0  
+    sloped_area = 0
+    for result in results:
+        boxes = result.boxes  
+        masks = result.masks  
+        label_names = result.names  
+
+        # Iterate through detected boxes and sum mask areas
+        for idx, box in enumerate(boxes):
+            box_data = box.data.numpy()  
+            label_idx = int(box_data[0, 5])  # Access the class label index
+            label = label_names[label_idx]
+            
+            mask = masks[idx]  
+            
+            # Access the data attribute of the mask and ensure it is converted to numpy array
+            mask_data = mask.data 
+            if isinstance(mask_data, torch.Tensor):
+                mask_data = mask_data.squeeze(0).numpy()  
+
+            # Calculate area of the mask: sum of all 1's in the mask array
+            mask_area = np.sum(mask_data)
+
+            # Increment area sum based on roof type
+            if label == 'flat':
+                flat_area += mask_area
+            elif label == 'sloped':
+                sloped_area += mask_area
+
+    # Calculate the ratio of areas
+    if sloped_area > 0:  
+        ratio_area_flat_to_steep = flat_area / sloped_area
+    else:
+        ratio_area_flat_to_steep = None
+
+    return {"ratio_area_flat_to_steep": ratio_area_flat_to_steep}
 
 @app.get("/roofs/")
 async def get_roofs():
