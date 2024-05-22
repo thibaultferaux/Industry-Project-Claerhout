@@ -3,3 +3,4 @@ test/
 valid/
 runs/
 model/
+.env
