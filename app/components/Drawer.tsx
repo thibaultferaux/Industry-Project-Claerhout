@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import clsx from "clsx";
 
 interface DrawerProps {
@@ -9,13 +10,10 @@ interface DrawerProps {
 const Drawer: React.FC<DrawerProps> = ({ open, children, className }) => {
   return (
     <div
-      className={clsx(
+      className={cn(
         className,
-        {
-          "w-2/3": open,
-          "w-0 pr-0": !open,
-        },
-        "h-full overflow-clip transition-all duration-700 ease-out-quint z-50 pr-12"
+        "absolute left-0 w-1/3 top-0 h-full max-h-full overflow-clip transition-all duration-700 ease-out-quint pr-12",
+        { hidden: !open }
       )}
     >
       {children}
