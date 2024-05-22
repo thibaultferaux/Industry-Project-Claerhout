@@ -16,7 +16,9 @@ const Scale: React.FC<ScaleProps> = ({
   className,
 }) => {
   return (
-    <div className={clsx(className, "bg-white p-4 border-2 border-light-gray")}>
+    <div
+      className={clsx(className, "bg-white p-4 border-[1px] border-light-gray")}
+    >
       <div className="flex justify-between">
         <p>Straal</p>
         <p>

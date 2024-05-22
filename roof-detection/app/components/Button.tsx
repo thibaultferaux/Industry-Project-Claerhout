@@ -23,7 +23,7 @@ const Button: React.FC<ButtonProps> = ({
         className,
         {
           "bg-primary-orange text-white": variant === "primary",
-          "bg-white border-2 border-primary-orange text-primary-text":
+          "bg-white border-[1px] border-primary-orange text-primary-text":
             variant === "secondary",
         },
         "px-5 py-2.5 text-small uppercase font-semibold"

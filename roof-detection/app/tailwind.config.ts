@@ -25,6 +25,9 @@ const config: Config = {
         h3: "1.25rem",
         small: "0.875rem",
       },
+      transitionTimingFunction: {
+        "out-quint": "cubic-bezier(0.22, 1, 0.36, 1)",
+      },
     },
   },
   plugins: [],
