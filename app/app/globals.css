@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  input[type="range"] {
+    @apply appearance-none w-full h-[1px] bg-secondary-text outline-none opacity-100;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 bg-primary-orange rounded-full cursor-pointer border-none;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    @apply appearance-none w-4 h-4 bg-primary-orange rounded-full cursor-pointer border-none;
+  }
+}
