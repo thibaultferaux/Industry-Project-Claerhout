@@ -22,6 +22,7 @@ async def get_results():
     sloped_area = 0
     flat = 0
     sloped = 0
+    #ratio en aantal daken berekenen
     for result in results:
         boxes = result.boxes  
         masks = result.masks  
@@ -57,10 +58,19 @@ async def get_results():
     else:
         ratio_area_flat_to_steep = None
 
-    flat_results = model(images,classes=[0],retina_masks=True)
+    flat_results = []
+    for result in results:
+        if(result.masks is not None):
+            filtered_result = result
+            masks = result.masks[result.boxes.cls == 0]
+            boxes = result.boxes[result.boxes.cls == 0]
+            filtered_result.masks = masks
+            filtered_result.boxes = boxes
+            flat_results.append(filtered_result)
     
     perimeters = []
     surface_areas = []
+    # omtrek en oppervlakte platte daken berekenen
     for result in flat_results:
         if(result.masks is not None):
             masks_cpu = result.masks.cpu()
