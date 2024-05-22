@@ -28,6 +28,9 @@ const config: Config = {
       transitionTimingFunction: {
         "out-quint": "cubic-bezier(0.22, 1, 0.36, 1)",
       },
+      fontFamily: {
+        sans: ["var(--font-open-sans)", "Open Sans", "sans-serif"],
+      },
     },
   },
   plugins: [],

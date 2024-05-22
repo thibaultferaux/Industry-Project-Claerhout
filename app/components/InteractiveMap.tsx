@@ -1,11 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import Button from "./Button";
 import Scale from "./Scale";
-import { useState } from "react";
-import LocationInput from "./LocationInput";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  GeolocateControl,
+  Map,
+  Marker,
+  NavigationControl,
+} from "react-map-gl";
+import GeocoderControl from "./MapControl/GeocoderControl";
+import { GeocoderControlProps, Location } from "@/lib/types";
 
 interface InteractiveMapProps {
   drawerOpen: boolean;
@@ -13,32 +19,34 @@ interface InteractiveMapProps {
   loading?: boolean;
 }
 
+const TOKEN = process.env.MAPBOX_TOKEN;
+
+if (!TOKEN) {
+  throw new Error("Missing Mapbox token");
+}
+
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
   drawerOpen,
   onSelect,
   loading,
 }) => {
-  // const [viewport, setViewport] = useState({
-  //   latitude: 37.7749,
-  //   longitude: -122.4194,
-  //   zoom: 11,
-  // });
+  const [viewport, setViewport] = useState({
+    latitude: 50.82307,
+    longitude: 3.32653,
+    zoom: 11,
+  });
 
   const [scaleValue, setScaleValue] = useState<number>(10);
-  const [locationValue, setLocationValue] = useState<string>("");
-
-  // Options for the map
-  // ReactMapGL
-  // Leaflet
+  const [location, setLocation] = useState<Location | null>(null);
 
   return (
     <div
       className={cn(
-        "h-full border-2 bg-slate-100 border-primary-orange relative p-4 transition-all duration-700 ease-out-quint ml-auto",
+        "h-full border-2 bg-slate-100 border-primary-orange relative transition-all duration-700 ease-out-quint ml-auto",
         { "w-2/3": drawerOpen, "w-full": !drawerOpen }
       )}
     >
-      <Image
+      {/* <Image
         src="/map-placeholder.png"
         alt="Placeholder map"
         layout="fill"
@@ -46,7 +54,33 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           "opacity-80 cursor-not-allowed": loading,
         })}
         aria-disabled={loading}
-      />
+      /> */}
+      <Map
+        {...viewport}
+        onMove={(evt) => setViewport(evt.viewState)}
+        mapboxAccessToken={TOKEN}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle="mapbox://styles/thibaultferaux/clwhuuy0900pi01qs0jx895rk"
+      >
+        {location && (
+          <Marker
+            longitude={location.longitude}
+            latitude={location.latitude}
+            anchor="bottom"
+          />
+        )}
+        <GeocoderControl
+          mapboxAccessToken={TOKEN}
+          position="top-left"
+          location={location}
+          setLocation={setLocation}
+          autocomplete
+          language="nl"
+          fuzzyMatch
+        />
+        <NavigationControl />
+        <GeolocateControl />
+      </Map>
       {!loading && (
         <>
           <Button
@@ -63,11 +97,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             max={20}
             className="absolute left-8 bottom-8 w-80"
           />
-          <LocationInput
+          {/* <LocationInput
             value={locationValue}
             setValue={setLocationValue}
             className="absolute left-8 top-8 w-80"
-          />
+          /> */}
         </>
       )}
     </div>

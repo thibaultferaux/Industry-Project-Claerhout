@@ -15,3 +15,15 @@
     @apply appearance-none w-4 h-4 bg-primary-orange rounded-full cursor-pointer border-none;
   }
 }
+.mapboxgl-ctrl-top-left {
+  @apply left-8 top-8 w-80 font-sans;
+}
+.mapboxgl-ctrl-top-left .mapboxgl-ctrl {
+  @apply m-0 float-none w-full shadow-none border-[1px] border-secondary-text rounded-none;
+}
+input[type="text"].mapboxgl-ctrl-geocoder--input {
+  @apply font-sans font-light w-full bg-white text-small p-2 border-[1px] border-secondary-text pl-9;
+}
+.mapboxgl-ctrl-geocoder--suggestion-title {
+  @apply font-sans text-small font-light;
+}
