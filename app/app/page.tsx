@@ -14,7 +14,8 @@ export default function Home() {
   const [results, setResults] = useState<Results | null>(null);
 
   const handleSelect = () => {
-    setDrawerOpen(!drawerOpen);
+    setResults(null);
+    setDrawerOpen(true);
   };
 
   const handleSubmit = () => {
@@ -46,6 +47,7 @@ export default function Home() {
         drawerOpen={drawerOpen}
         onSelect={handleSelect}
         loading={modelLoading}
+        clearResults={handleClear}
       />
     </div>
   );

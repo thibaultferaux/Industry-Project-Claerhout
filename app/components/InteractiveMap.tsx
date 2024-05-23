@@ -23,6 +23,7 @@ interface InteractiveMapProps {
   drawerOpen: boolean;
   onSelect: () => void;
   loading?: boolean;
+  clearResults: () => void;
 }
 
 const TOKEN = process.env.MAPBOX_TOKEN;
