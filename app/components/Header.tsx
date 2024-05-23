@@ -6,8 +6,9 @@ const Header = () => (
     <Image
       src="/claerhout-aluminium-logo.png"
       alt="Clearhout Aluminium logo"
-      height={200}
-      width={150}
+      height={600}
+      width={193}
+      className="object-contain h-12 w-auto"
     />
   </header>
 );

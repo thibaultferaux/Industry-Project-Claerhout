@@ -2,16 +2,22 @@
 
 import Button from "./Button";
 import Scale from "./Scale";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   GeolocateControl,
+  Layer,
   Map,
+  MapRef,
   Marker,
   NavigationControl,
+  Source,
 } from "react-map-gl";
 import GeocoderControl from "./MapControl/GeocoderControl";
-import { GeocoderControlProps, Location } from "@/lib/types";
+import { Location } from "@/lib/types";
+import { MapLayerMouseEvent } from "mapbox-gl";
+import Pin from "./Icons/Pin";
+import Radius from "./MapControl/Radius";
 
 interface InteractiveMapProps {
   drawerOpen: boolean;
@@ -39,6 +45,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [scaleValue, setScaleValue] = useState<number>(10);
   const [location, setLocation] = useState<Location | null>(null);
 
+  const mapRef = useRef<MapRef | null>(null);
+
+  const handleClick = (evt: MapLayerMouseEvent) => {
+    const { lngLat } = evt;
+    setLocation({
+      latitude: lngLat.lat,
+      longitude: lngLat.lng,
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -46,28 +62,30 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         { "w-2/3": drawerOpen, "w-full": !drawerOpen }
       )}
     >
-      {/* <Image
-        src="/map-placeholder.png"
-        alt="Placeholder map"
-        layout="fill"
-        className={cn("object-cover", {
-          "opacity-80 cursor-not-allowed": loading,
-        })}
-        aria-disabled={loading}
-      /> */}
       <Map
         {...viewport}
         onMove={(evt) => setViewport(evt.viewState)}
         mapboxAccessToken={TOKEN}
         style={{ width: "100%", height: "100%" }}
         mapStyle="mapbox://styles/thibaultferaux/clwhuuy0900pi01qs0jx895rk"
+        onClick={handleClick}
+        ref={mapRef}
       >
         {location && (
-          <Marker
-            longitude={location.longitude}
-            latitude={location.latitude}
-            anchor="bottom"
-          />
+          <>
+            <Marker
+              longitude={location.longitude}
+              latitude={location.latitude}
+              anchor="bottom"
+            >
+              <Pin className="h-10 w-10" />
+            </Marker>
+            <Radius
+              {...location}
+              radius={scaleValue * 10}
+              zoom={viewport.zoom}
+            />
+          </>
         )}
         <GeocoderControl
           mapboxAccessToken={TOKEN}
@@ -97,11 +115,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             max={20}
             className="absolute left-8 bottom-8 w-80"
           />
-          {/* <LocationInput
-            value={locationValue}
-            setValue={setLocationValue}
-            className="absolute left-8 top-8 w-80"
-          /> */}
         </>
       )}
     </div>
