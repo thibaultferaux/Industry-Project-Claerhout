@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "./globals.css";
 import SiteLayout from "@/components/SiteLayout";
 
-const openSans = Open_Sans({ subsets: ["latin"] });
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-open-sans",
+});
 
 export const metadata: Metadata = {
   title: "RoofRadar | Claerhout Aluminium",

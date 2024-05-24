@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import React, { FC } from "react";
 
 interface SearchIconProps {
@@ -9,7 +9,7 @@ interface SearchIconProps {
 const SearchIcon: FC<SearchIconProps> = ({ fill = "#202020", className }) => {
   return (
     <svg
-      className={clsx(className, "h-4 w-4")}
+      className={cn("h-4 w-4", className)}
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
