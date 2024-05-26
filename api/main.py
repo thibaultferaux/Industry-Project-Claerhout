@@ -10,7 +10,7 @@ import logging
 app = FastAPI()
 
 # Load the YOLO model
-model = YOLO("../roof-detection/model/best.pt")
+model = YOLO("./model/best.pt")
 logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
 
 @app.get("/")
@@ -50,7 +50,7 @@ async def get_results():
                     # Access the data attribute of the mask and ensure it is converted to numpy array
                     mask_data = results[0].masks[idx].data
                     if isinstance(mask_data, torch.Tensor):
-                        mask_data = mask_data.squeeze(0).numpy()  
+                        mask_data = mask_data.squeeze(0).numpy()
                     # Calculate area of the mask: sum of all 1's in the mask array
                     mask_area = np.sum(mask_data)
                     # Increment area sum based on roof type and count the number of roofs of each type
@@ -65,7 +65,7 @@ async def get_results():
                 if(results[0] is not None):
                         results[0].masks = results[0].masks[results[0].boxes.cls == 0]
                         results[0].boxes = results[0].boxes[results[0].boxes.cls == 0]
-                
+
                 # empty data for perimeters and surface area for this image
                 perimeters = []
                 flat_areas = []
@@ -78,14 +78,14 @@ async def get_results():
 
                     #calculate the surface area of the image
                     flat_areas.append(np.sum(mask) * 1.0)
-                
+
                 #sum of all the perimeters and surface areas of this image and convert them into meters with ratio of 298 pixels to 30 meters
                 total_perimeter_list.append(sum(perimeters) / (298 / 30))
                 total_surface_area_list.append(sum(flat_areas) / ((298 / 30) **2))
         except Exception as e:
             logging.error(f"Error processing image {results[0].path} - error message:" + str(e))
     logging.info("images processed")
-    if sloped_area > 0 and flat_area > 0:  
+    if sloped_area > 0 and flat_area > 0:
         ratio_area_flat_to_steep = flat_area / sloped_area
     else:
         ratio_area_flat_to_steep = 0
@@ -115,10 +115,10 @@ async def get_results():
     except Exception as e:
         logging.error("Error saving results - error message:" + str(e))
     return {"plat hellend ratio": ratio_area_flat_to_steep,"plat gebied": flat_area,"hellend gebied": sloped_area,"platte daken": flat,"hellende daken": sloped,"omtrek platte daken": sum(total_perimeter_list),"oppervlakte platte daken": sum(total_surface_area_list)}
-    
+
 @app.get("/data/")
 async def get_data():
-    with open('results.json', 'r') as file:
+    with open('/mnt/data/results.json', 'r') as file:
         jsondata = json.load(file)
     logging.info("data retrieved")
     return jsondata
