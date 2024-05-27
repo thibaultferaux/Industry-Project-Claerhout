@@ -1,0 +1,6 @@
+fastapi[all]
+ultralytics
+numpy
+dill
+opencv-python
+torch
