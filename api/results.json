@@ -1,2 +1,11 @@
 {
+    "brussel": {
+        "plat hellend ratio": 0,
+        "plat gebied": 0,
+        "hellend gebied": 0,
+        "platte daken": 0,
+        "hellende daken": 0,
+        "omtrek platte daken": 0,
+        "oppervlakte platte daken": 0
+    }
 }
