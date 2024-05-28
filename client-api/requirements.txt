@@ -1,0 +1,5 @@
+fastapi[all]
+numpy
+azure-storage-queue
+azure-cosmos
+azure-storage-blob
