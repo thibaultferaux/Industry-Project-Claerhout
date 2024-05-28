@@ -1,6 +1,5 @@
 import math
 import os
-from tkinter import Image
 from fastapi import FastAPI
 from ultralytics import YOLO
 import numpy as np
@@ -9,9 +8,6 @@ import glob
 import torch
 import json
 import logging
-from PIL import Image, ImageDraw
-import requests
-from io import BytesIO
 
 app = FastAPI()
 
@@ -34,6 +30,11 @@ def meters_to_pixels(radius_meters, latitude, zoom_level):
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.post("/process/")
+async def process_queue(job_id: str):
+    # Here comes the code to process the queue
+    return {"message": "Processing job with id: " + job_id}
 
 @app.get("/results/")
 async def get_results():
@@ -141,56 +142,3 @@ async def get_data():
     logging.info("data retrieved")
     return jsondata
 
-@app.post("/generate-tiles/")
-async def generate_tiles(latitude: float, longitude: float, radius_meters: int):
-    target_zoom = 19
-    azure_maps_key = "3C8x085Q0vz4CxSijVuLX0BptJ8McmbxlLa0h13u5u9Uoiy7X970JQQJ99AEACi5YpztG4CIAAAgAZMPx2TP"
-    output_dir = './tiles/'
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Calculate the radius in pixels
-    radius_pixels = meters_to_pixels(radius_meters, latitude, target_zoom)
-    stitched_image_size = radius_pixels * 2
-
-    # Calculate center tile and pixel offsets
-    center_x_tile, center_y_tile = lat_lon_to_tile(latitude, longitude, target_zoom)
-    center_pixel_x = ((longitude + 180.0) / 360.0 * (2 ** target_zoom) % 1) * 256
-    center_pixel_y = ((1 - math.log(math.tan(math.radians(latitude)) + 1 / math.cos(math.radians(latitude))) / math.pi) / 2 * (2 ** target_zoom) % 1) * 256
-
-    # Stitch tiles to create a large image
-    stitched_image = Image.new('RGB', (stitched_image_size, stitched_image_size))
-    start_x = center_x_tile - stitched_image_size // (2 * 256)
-    start_y = center_y_tile - stitched_image_size // (2 * 256)
-
-    for x in range(start_x, start_x + stitched_image_size // 256 + 1):
-        for y in range(start_y, start_y + stitched_image_size // 256 + 1):
-            url = f"https://atlas.microsoft.com/map/tile?subscription-key={azure_maps_key}&api-version=2022-08-01&tilesetId=microsoft.imagery&zoom={target_zoom}&x={x}&y={y}&format=png"
-            response = requests.get(url)
-            if response.status_code == 200:
-                tile_image = Image.open(BytesIO(response.content))
-                stitched_image.paste(tile_image, ((x - start_x) * 256, (y - start_y) * 256))
-
-    # Apply circular mask centered on the stitched image
-    center = (stitched_image_size // 2, stitched_image_size // 2)
-    mask = Image.new('L', stitched_image.size, 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((center[0] - radius_pixels, center[1] - radius_pixels, center[0] + radius_pixels, center[1] + radius_pixels), fill=255)
-    stitched_image.putalpha(mask)
-
-    # Save the stitched image result and generate tiles
-    image_paths = []
-    tile_size_pixels = int(310 / 0.2986)  # Make sure this is calculated only once and reused
-    num_tiles_x = stitched_image_size // tile_size_pixels
-    num_tiles_y = stitched_image_size // tile_size_pixels
-
-
-    for x in range(num_tiles_x):
-        for y in range(num_tiles_y):
-            box = (x * (310 // 0.2986), y * (310 // 0.2986), (x + 1) * (310 // 0.2986), (y + 1) * (310 // 0.2986))
-            tile = stitched_image.crop(box)
-            tile_path = os.path.join(output_dir, f'tile_{x}_{y}.png')
-            if tile.getbbox():  # Check if tile is not completely empty
-                tile.save(tile_path)
-                image_paths.append(tile_path)
-
-    return {"message": "Circular area generated and saved", "files": image_paths}
