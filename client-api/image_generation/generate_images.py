@@ -7,6 +7,7 @@ import asyncio
 from dotenv import load_dotenv
 from typing import Tuple, Dict, List
 from azure.storage.blob import ContainerClient
+from azure.storage.queue import QueueClient
 import logging
 
 from image_generation.utils import meters_to_pixels, lat_lon_to_tile
@@ -48,7 +49,7 @@ def split_image(image: Image.Image, tile_size: int) -> List[Image.Image]:
                 tiles.append(tile)
     return tiles
 
-async def generate_tiles(latitude: float, longitude: float, radius_meters: int, container_client: ContainerClient, job_id: str) -> Dict[str, List[str]]:
+async def generate_tiles(latitude: float, longitude: float, radius_meters: int, container_client: ContainerClient, queue_client: QueueClient, job_id: str) -> Dict[str, List[str]]:
     logging.info(f"Generating tiles for latitude: {latitude}, longitude: {longitude}, radius: {radius_meters} meters")
 
     """Generate tiles for a given latitude, longitude, and radius, and upload them to Azure Blob Storage."""
@@ -92,7 +93,7 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     upload_tasks = []
     for idx, tile in enumerate(tiles):
         filename = f'tile_{idx}.png'
-        upload_tasks.append(upload_image_to_blob(tile, container_client, filename))
+        upload_tasks.append(upload_image_to_blob(tile, filename, container_client, queue_client))
     await asyncio.gather(*upload_tasks)
 
     logging.info("All tiles uploaded to Azure Blob Storage.")

@@ -3,6 +3,7 @@ import asyncio
 
 from azure_utils.cosmos import create_job, get_job
 from azure_utils.blob_storage import create_blob_container
+from azure_utils.storage_queue import create_storage_queue
 from image_generation.generate_images import generate_tiles
 
 app = FastAPI()
@@ -15,13 +16,19 @@ async def root():
 async def detect_roofs(latitude: float, longitude: float, radius_meters: int, background_tasks: BackgroundTasks):
     coordinates = (latitude, longitude)
 
-    # Create new job in Cosmos DB
-    job = create_job(coordinates, radius_meters)
+    try:
+        # Create new job in Cosms DB
+        job = create_job(coordinates, radius_meters)
 
-    # Create blob container in Azure Storage
-    container_client = create_blob_container(job.id)
+        # Create blob container in Azure Storage
+        container_client = create_blob_container(job.id)
 
-    background_tasks.add_task(generate_tiles, latitude, longitude, radius_meters, container_client, job.id)
+        # Create storage queue in Azure Storage
+        queue_client = create_storage_queue(job.id)
+    except Exception as e:
+        return {"message": f"Error creating job: {e}"}
+
+    background_tasks.add_task(generate_tiles, latitude, longitude, radius_meters, container_client, queue_client, job.id)
 
     return {"message": "Job created", "jobId": job.id}
 
