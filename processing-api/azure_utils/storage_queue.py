@@ -12,7 +12,7 @@ def get_queue_client(queue_name: str) -> QueueClient:
     return queue_service_client.get_queue_client(queue_name)
 
 async def fetch_urls_from_queue(queue_client: QueueClient, batch_size: int = 5):
-    messages = await queue_client.receive_messages(max_messages=batch_size)
+    messages = queue_client.receive_messages(max_messages=batch_size)
     urls = []
     for message in messages:
         urls.append(message.content)
