@@ -29,12 +29,21 @@ async def fetch_tile(x: float, y: float, zoom: int) -> Image.Image:
     return None
 
 def apply_circular_mask(image: Image.Image, center: Tuple[int, int], radius: int) -> Image.Image:
-    """Apply a circular mask to the image."""
-    mask = Image.new('L', image.size, 0)
+    """Apply a black circular mask to the image."""
+    # Create a mask with the same size as the image, filled with white
+    mask = Image.new('L', image.size, 255)
     draw = ImageDraw.Draw(mask)
-    draw.ellipse((center[0] - radius, center[1] - radius, center[0] + radius, center[1] + radius), fill=255)
-    image.putalpha(mask)
-    return image
+
+    # Draw a black circle on the mask
+    draw.ellipse((center[0] - radius, center[1] - radius, center[0] + radius, center[1] + radius), fill=0)
+
+    # Create a black image with the same size as the original image
+    black_image = Image.new('RGB', image.size, (0, 0, 0))
+
+    # Combine the original image with the black image using the mask
+    masked_image = Image.composite(black_image, image, mask)
+
+    return masked_image
 
 def split_image(image: Image.Image, tile_size: int) -> List[Image.Image]:
     """Split a large image into smaller tiles."""

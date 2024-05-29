@@ -12,7 +12,7 @@ connection_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 blob_service_client = BlobServiceClient.from_connection_string(connection_str)
 
 def create_blob_container(container_name:str) -> ContainerClient:
-    return blob_service_client.create_container(container_name)
+    return blob_service_client.create_container(container_name, public_access="container")
 
 async def upload_image_to_blob(image: Image.Image, filename: str, container_client: ContainerClient, queue_client: QueueClient) -> None:
     blob_client = container_client.get_blob_client(filename)
