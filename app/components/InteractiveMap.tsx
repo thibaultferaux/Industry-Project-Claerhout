@@ -88,19 +88,23 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             />
           </>
         )}
-        <GeocoderControl
-          mapboxAccessToken={TOKEN}
-          position="top-left"
-          location={location}
-          setLocation={setLocation}
-          autocomplete
-          language="nl"
-          fuzzyMatch
-        />
-        <NavigationControl />
-        <GeolocateControl />
+        {!loading && (
+          <>
+            <GeocoderControl
+              mapboxAccessToken={TOKEN}
+              position="top-left"
+              location={location}
+              setLocation={setLocation}
+              autocomplete
+              language="nl"
+              fuzzyMatch
+            />
+            <NavigationControl />
+            <GeolocateControl />
+          </>
+        )}
       </Map>
-      {!loading && (
+      {!loading ? (
         <>
           <Button
             variant="primary"
@@ -117,6 +121,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             className="absolute left-8 bottom-8 w-80"
           />
         </>
+      ) : (
+        <div className="absolute inset-0 bg-white bg-opacity-30 cursor-not-allowed" />
       )}
     </div>
   );
