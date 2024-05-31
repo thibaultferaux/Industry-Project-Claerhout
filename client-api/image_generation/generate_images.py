@@ -1,5 +1,4 @@
 import os
-import math
 from io import BytesIO
 from PIL import Image, ImageDraw
 import requests
@@ -9,6 +8,7 @@ from typing import Tuple, Dict, List
 from azure.storage.blob import ContainerClient
 from azure.storage.queue import QueueClient
 import logging
+import requests
 
 from image_generation.utils import meters_to_pixels, lat_lon_to_tile
 from azure_utils.blob_storage import upload_image_to_blob
@@ -94,6 +94,8 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     center = (stitched_image_size // 2, stitched_image_size // 2)
     stitched_image = apply_circular_mask(stitched_image, center, radius_pixels)
 
+    logging.info("Applied circular mask to stitched image.")
+
     tile_size_pixels = int(310 / 0.2986)
     tiles = split_image(stitched_image, tile_size_pixels)
 
@@ -108,5 +110,13 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
     job = set_total_images(job_id, len(tiles))
+
+    # Call the processing API to start processing the images
+    params = {
+        "job_id": job_id
+    }
+    response = requests.post(f"https://roof-detection-processing-api.internal.grayground-1d2041e8.germanywestcentral.azurecontainerapps.io/process/", params=params)
+
+    logging.info(f"Processing API response: {response.json()}")
 
     return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": len(tiles)}

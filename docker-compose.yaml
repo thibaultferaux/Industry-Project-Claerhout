@@ -1,11 +1,20 @@
 version: "3.9"
 
 services:
-  api:
+  roof-detection-client-api:
     build:
-      context: ./api
-    image: thibaultferaux/industry-project-roof-detection-api
+      context: ./client-api
+    image: thibaultferaux/industry-project-roof-detection-client-api
     ports:
       - 8000:8000
-    volumes:
-      - ./api/results.json:/mnt/data/results.json
+    env_file:
+      - ./client-api/.env
+
+  roof-detection-processing-api:
+    build:
+      context: ./processing-api
+    image: thibaultferaux/industry-project-roof-detection-processing-api
+    expose:
+      - 8000
+    env_file:
+      - ./processing-api/.env

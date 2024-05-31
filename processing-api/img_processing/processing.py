@@ -14,7 +14,7 @@ from img_processing.utils import pixels_to_meters, square_pixels_to_meters
 from azure_utils.blob_storage import upload_result_image
 
 # Load the YOLO model
-model = YOLO("../model/best.pt")
+model = YOLO("./model/best.pt")
 
 async def handle_image_batch(image_batch: List[str], container_client: ContainerClient) -> Union[Dict[str, Any], GroupResults]:
     try:

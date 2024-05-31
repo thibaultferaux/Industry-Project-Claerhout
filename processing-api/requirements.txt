@@ -2,5 +2,11 @@ fastapi[all]
 ultralytics
 numpy
 dill
+python-dotenv
+Pillow
+pydantic
 opencv-python
 torch
+azure-storage-queue
+azure-cosmos
+azure-storage-blob

@@ -1,4 +1,4 @@
-FROM ultralytics/ultralytics:8.2.20-python
+FROM python:3.9-alpine
 WORKDIR '/app'
 COPY ./requirements.txt ./
 RUN pip install --no-cache-dir --upgrade -r requirements.txt

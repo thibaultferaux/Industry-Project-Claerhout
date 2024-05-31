@@ -1,5 +1,4 @@
 from fastapi import FastAPI, BackgroundTasks
-import asyncio
 
 from azure_utils.cosmos import create_job, get_job
 from azure_utils.blob_storage import create_blob_container
@@ -35,4 +34,4 @@ async def detect_roofs(latitude: float, longitude: float, radius_meters: int, ba
 @app.get("/job-status/{job_id}")
 async def job_status(job_id: str):
     job = get_job(job_id)
-    return job.model_dump_json()
+    return job
