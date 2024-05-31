@@ -9,7 +9,17 @@ from azure_utils.blob_storage import get_container_client
 from img_processing.processing import handle_image_batch
 import asyncio
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import os
+
 app = FastAPI()
+
+smtp_server = os.environ.get('SMTP_SERVER')
+smtp_port = os.environ.get('SMTP_PORT')
+username = os.environ.get('SMTP_USERNAME')
+password = os.environ.get('SMTP_PASSWORD')
 
 logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -60,6 +70,23 @@ async def process_queue(job_id: str):
                     queue_client.delete_queue()
                     # Delete the blob container
                     # container_client.delete_container()
+                    from_email = 'noreply@pebbles-health.be'
+                    to_email = 'mattis.dewintere@gmail.com'
+                    subject = 'Resultaten Roof Radar'
+                    body = job
+                    msg = MIMEMultipart()
+                    msg['From'] = from_email
+                    msg['To'] = to_email
+                    msg['Subject'] = subject
+                    msg.attach(MIMEText(body, 'plain'))
+                    try:
+                        server = smtplib.SMTP(smtp_server, smtp_port)
+                        server.starttls()  # Secure the connection
+                        server.login(username, password)
+                        server.sendmail(from_email, to_email, msg.as_string())
+                        print("Email sent successfully")
+                    except Exception as e:
+                        print(f"Failed to send email: {e}")
                     return
 
         except Exception as e:
