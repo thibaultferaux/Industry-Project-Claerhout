@@ -20,6 +20,7 @@ const Radius: React.FC<RadiusProps> = ({
       type: "Point",
       coordinates: [longitude, latitude],
     },
+    properties: null
   };
 
   const layerStyle: CircleLayer = {
