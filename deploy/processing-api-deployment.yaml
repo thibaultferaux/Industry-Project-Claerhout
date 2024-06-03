@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: processing-api-deployment
 spec:
-  replicas: 3  # Initial replica count
+  replicas: 3
   selector:
     matchLabels:
       app: processing-api
@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
       - name: processing-api
-        image: thibaultferaux/industry-project-roof-detection-processing-api:latest
-        ports:
-        - containerPort: 80
-        envFrom:
-        - secretRef:
-            name: azure-secrets
+        image: your-image-name
+        resources:
+          requests:
+            cpu: "500m"  # Request 500 millicores of CPU
+          limits:
+            cpu: "1000m"  # Limit the CPU to 1000 millicores
