@@ -1,10 +1,6 @@
 import { GeocoderOptions } from "@mapbox/mapbox-gl-geocoder";
 import { ControlPosition } from "react-map-gl";
 
-export interface Results {
-  flatRoofs: number;
-}
-
 export interface Location {
   longitude: number;
   latitude: number;

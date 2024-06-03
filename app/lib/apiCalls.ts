@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ModelRequest, ModelResponse } from "./types";
+import { Job, ModelRequest, ModelResponse } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -7,11 +7,11 @@ export const startModel = async (
   request: ModelRequest
 ): Promise<ModelResponse> => {
   try {
-    console.log("request", request);
     const response = await axios.post(
-      "http://localhost:8000/detect-roofs/",
+      API_URL + "detect-roofs/",
       request
     );
+    console.log("Start model response", response.data)
     return response.data;
   } catch (error) {
     console.error(error);
@@ -19,11 +19,12 @@ export const startModel = async (
   }
 };
 
-export const getJob = async (jobId: string): Promise<ModelResponse> => {
+export const getJob = async (jobId: string): Promise<Job> => {
   try {
     const response = await axios.get(
-      `http://localhost:8000/job-status/${jobId}`
+      `${API_URL}job-status/${jobId}`
     );
+    console.log("Get job response", response.data)
     return response.data;
   } catch (error) {
     console.error(error);

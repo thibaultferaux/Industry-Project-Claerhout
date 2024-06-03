@@ -6,15 +6,19 @@ import InteractiveMap from "@/components/InteractiveMap";
 import ModelLoading from "@/components/ModelLoading";
 import ModelResults from "@/components/ModelResults";
 import ModelStatus from "@/components/ModelStatus";
-import { startModel } from "@/lib/apiCalls";
-import { Location, ModelRequest, Results } from "@/lib/types";
-import { Mutation, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { getJob, startModel } from "@/lib/apiCalls";
+import useJobStore from "@/lib/store";
+import { Job, Location, ModelRequest, Results } from "@/lib/types";
+import { Mutation, useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [results, setResults] = useState<Results | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+
+  // Store states
+  const { job, setJob, clearJob } = useJobStore();
 
   // Location states
   const [location, setLocation] = useState<Location | null>(null);
@@ -22,13 +26,41 @@ export default function Home() {
 
   const mutation = useMutation({
     mutationFn: (body: ModelRequest) => startModel(body),
+    onSuccess({ jobId }) {
+      setJobId(jobId);
+    },
   });
 
+  const { data: jobData} = useQuery<Job | null>({
+    queryKey: ["job", jobId ?? job?.id],
+    queryFn: () => getJob(jobId ?? job!.id),
+    enabled: (!!jobId || !!job) && (job?.status !== "completed"),
+    refetchInterval: 10000,
+    placeholderData: job ?? null,
+  });
+
+  // Set drawer open when job is present
+  useEffect(() => {
+    if (job) {
+      setDrawerOpen(true);
+      // TODO: Set location, scaleValue and viewport on the map
+    }
+  }, [job])
+
+  // Update job state when jobData changes
+  useEffect(() => {
+    if (jobData) {
+      setJob(jobData);
+    }
+  }, [jobData, setJob])
+
+  // Handle select location
   const handleSelect = () => {
     setResults(null);
     setDrawerOpen(true);
   };
 
+  // Handle submit start model
   const handleSubmit = () => {
     if (!location) return;
 
@@ -39,11 +71,16 @@ export default function Home() {
     });
   };
 
+  // Handle clear results
   const handleClear = () => {
+    setJobId(null);
+    clearJob();
     setResults(null);
     setDrawerOpen(false);
   };
 
+  // Show error message when mutation is error
+  // TODO: Create error component
   if (mutation.isError) {
     console.error(mutation.error);
     return <div>Error</div>;
@@ -61,11 +98,12 @@ export default function Home() {
         )} */}
         {mutation.isPending ? (
           <ModelLoading />
-        ) : mutation.isSuccess ? (
-          <div>jobId: {mutation.data?.jobId}</div>
+        ) : !job ? (
+          <InfoStep onSubmit={handleSubmit} />
+        ) : job.status === "completed" ? (
+          <ModelResults results={job} onClear={handleClear} />
         ) : (
-          // <InfoStep onSubmit={handleSubmit} />
-          <ModelStatus />
+          <ModelStatus status={job.status} />
         )}
       </Drawer>
       <InteractiveMap
