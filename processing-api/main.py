@@ -72,4 +72,3 @@ async def process_queue(job_id: str):
     return {"message": "Processing job with id: " + job_id}
 
 
-

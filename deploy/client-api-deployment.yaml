@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-api-deployment
+spec:
+  replicas: 1  
+  selector:
+    matchLabels:
+      app: client-api
+  template:
+    metadata:
+      labels:
+        app: client-api
+    spec:
+      containers:
+      - name: client-api
+        image: thibaultferaux/industry-project-roof-detection-client-api:latest
+        ports:
+        - containerPort: 80
+        envFrom:
+        - secretRef:
+            name: azure-secrets
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
