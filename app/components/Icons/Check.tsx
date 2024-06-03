@@ -16,7 +16,7 @@ const Check: React.FC<CheckProps> = ({ fill = "#4A4949", className }) => {
       <circle
         cx="128"
         cy="128"
-        r="128"
+        r="122"
         fill="#ffffff"
         stroke={fill}
         strokeLinecap="round"
@@ -24,7 +24,8 @@ const Check: React.FC<CheckProps> = ({ fill = "#4A4949", className }) => {
         strokeWidth="16"
       />
       <polyline
-        points="80 128 116 164 176 104"
+        points="72 139 106 173 184 94"
+        // points="88 136 112 160 168 104"
         fill="none"
         stroke={fill}
         strokeLinecap="round"

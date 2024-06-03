@@ -47,7 +47,7 @@ const StatusIndicatorWrapper: React.FC<StatusIndicatorWrapperProps> = ({
   children,
 }) => {
   return (
-    <ol className="ml-2 relative border-l-[0.5px] border-light-gray">
+    <ol className="ml-1.5 py-2 relative border-l-[0.5px] border-light-gray">
       {children}
     </ol>
   );
@@ -61,12 +61,12 @@ const StatusIndicatorItem: React.FC<StatusIndicatorItemProps> = ({
   return (
     <li className="mb-10 ml-6 last:mb-0">
       {stage === "completed" ? (
-        <Check className="absolute w-3 h-3 mt-1.5 -left-1.5 block" />
+        <Check className="absolute w-3 h-3 mt-1.5 -left-1.5 block outline outline-2 outline-white rounded-full" />
       ) : (
         <div
           className={cn(
-            "absolute w-3 h-3 bg-white rounded-full mt-1.5 -left-1.5 border",
-            stage === "current" ? "border-primary-orange" : "border-light-gray"
+            "absolute w-3 h-3 bg-white rounded-full mt-1.5 -left-1.5 border outline outline-2 outline-white",
+            stage === "current" ? "border-primary-orange-alpha border-t-primary-orange spinner" : "border-light-gray"
           )}
         />
       )}
