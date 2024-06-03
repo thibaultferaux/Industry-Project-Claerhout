@@ -20,6 +20,10 @@ import Pin from "./Icons/Pin";
 import Radius from "./MapControl/Radius";
 
 interface InteractiveMapProps {
+  location: Location | null;
+  setLocation: (location: Location | null) => void;
+  scaleValue: number;
+  setScaleValue: (scaleValue: number) => void;
   drawerOpen: boolean;
   onSelect: () => void;
   loading?: boolean;
@@ -33,6 +37,10 @@ if (!TOKEN) {
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
+  location,
+  setLocation,
+  scaleValue,
+  setScaleValue,
   drawerOpen,
   onSelect,
   loading,
@@ -42,9 +50,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     longitude: 3.32653,
     zoom: 11,
   });
-
-  const [scaleValue, setScaleValue] = useState<number>(10);
-  const [location, setLocation] = useState<Location | null>(null);
 
   const mapRef = useRef<MapRef | null>(null);
 
