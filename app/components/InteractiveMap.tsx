@@ -121,8 +121,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <Scale
             value={scaleValue}
             setValue={setScaleValue}
-            min={1}
-            max={20}
+            min={0.1}
+            max={5.0}
             className="absolute left-8 bottom-8 w-80"
           />
         </>

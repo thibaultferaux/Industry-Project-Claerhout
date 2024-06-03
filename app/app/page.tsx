@@ -5,6 +5,7 @@ import InfoStep from "@/components/InfoStep";
 import InteractiveMap from "@/components/InteractiveMap";
 import ModelLoading from "@/components/ModelLoading";
 import ModelResults from "@/components/ModelResults";
+import ModelStatus from "@/components/ModelStatus";
 import { startModel } from "@/lib/apiCalls";
 import { Location, ModelRequest, Results } from "@/lib/types";
 import { Mutation, useMutation } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ export default function Home() {
 
   // Location states
   const [location, setLocation] = useState<Location | null>(null);
-  const [scaleValue, setScaleValue] = useState<number>(10);
+  const [scaleValue, setScaleValue] = useState<number>(2.5);
 
   const mutation = useMutation({
     mutationFn: (body: ModelRequest) => startModel(body),
@@ -34,7 +35,7 @@ export default function Home() {
     mutation.mutate({
       latitude: location.latitude,
       longitude: location.longitude,
-      radius: scaleValue,
+      radius: Math.floor(scaleValue * 1000),
     });
   };
 
@@ -63,7 +64,8 @@ export default function Home() {
         ) : mutation.isSuccess ? (
           <div>jobId: {mutation.data?.jobId}</div>
         ) : (
-          <InfoStep onSubmit={handleSubmit} />
+          // <InfoStep onSubmit={handleSubmit} />
+          <ModelStatus />
         )}
       </Drawer>
       <InteractiveMap

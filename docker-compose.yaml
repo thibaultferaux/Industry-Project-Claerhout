@@ -19,16 +19,14 @@ services:
     env_file:
       - ./processing-api/.env
 
-  app:
-    build:
-      context: ./app
-    ports:
-      - 3000:3000
-    env_file:
-      - ./app/.env.local
-    restart: always
-    volumes:
-      - ./app/app:/app/app
-      - ./app/components:/app/components
-      - ./app/lib:/app/lib
-      - ./app/public:/app/public
+  # app:
+  #   build:
+  #     context: ./app
+  #   ports:
+  #     - 3000:3000
+  #   env_file:
+  #     - ./app/.env.local
+  #   restart: always
+  #   volumes:
+  #     - ./app:/app:delegated
+  #     - /app/node_modules
