@@ -39,6 +39,27 @@ def meters_to_pixels(radius_meters, latitude, zoom_level):
     meters_per_pixel = 156543.03392 * math.cos(latitude * math.pi / 180) / (2 ** zoom_level)
     return int(radius_meters / meters_per_pixel)
 
+def email(job):
+    to_email = job["email"]
+    logging.info(f"Sending email from {username} to {to_email}")
+    subject = 'Resultaten Roof Radar'
+    body = f'hier zijn de resultaten van roof radar op de coordinaten: {job["coordinates"][0]},{job["coordinates"][1]} \n\n Aantal platte daken: {job["totalFlatRoofs"]} \n Aantal hellende daken: {job["totalSlopedRoofs"]} \n totale oppervlakte platte daken: {round(job["totalSurfaceAreaFlatRoofs"])}m² \n totale omtrek platte daken: {round(job["totalCircumferenceFlatRoofs"])}m \n ratio platte daken tov hellende daken: {round(job["ratioFlatRoofs"]*100,2)}%'
+    logging.debug(f"Email body: {body}")
+    msg = MIMEMultipart()
+    msg['From'] = username
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+    logging.debug(f"Email message: {msg.as_string()}")
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  # Secure the connection
+        server.login(username, password)
+        server.sendmail(username, to_email, msg.as_string())
+        logging.info("Email sent successfully")
+    except Exception as e:
+        logging.error(f"Failed to send email: {e}")
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -75,26 +96,7 @@ async def process_queue(job_id: str):
                     queue_client.delete_queue()
                     # Delete the blob container
                     # container_client.delete_container()
-
-                    to_email = 'thibault.feraux@hotmail.com'
-                    logging.info(f"Sending email from {username} to {to_email}")
-                    subject = 'Resultaten Roof Radar'
-                    body = json.dumps(job, indent=4)
-                    logging.debug(f"Email body: {body}")
-                    msg = MIMEMultipart()
-                    msg['From'] = username
-                    msg['To'] = to_email
-                    msg['Subject'] = subject
-                    msg.attach(MIMEText(body, 'plain'))
-                    logging.debug(f"Email message: {msg.as_string()}")
-                    try:
-                        server = smtplib.SMTP(smtp_server, smtp_port)
-                        server.starttls()  # Secure the connection
-                        server.login(username, password)
-                        server.sendmail(username, to_email, msg.as_string())
-                        logging.info("Email sent successfully")
-                    except Exception as e:
-                        logging.error(f"Failed to send email: {e}")
+                    email(job)
                     return
 
         except Exception as e:

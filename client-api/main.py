@@ -12,12 +12,12 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/detect-roofs/")
-async def detect_roofs(latitude: float, longitude: float, radius_meters: int, background_tasks: BackgroundTasks):
+async def detect_roofs(latitude: float, longitude: float, radius_meters: int,email:str, background_tasks: BackgroundTasks):
     coordinates = (latitude, longitude)
 
     try:
         # Create new job in Cosms DB
-        job = create_job(coordinates, radius_meters)
+        job = create_job(coordinates, radius_meters,email)
 
         # Create blob container in Azure Storage
         container_client = create_blob_container(job.id)
