@@ -1,5 +1,5 @@
 import math
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 import numpy as np
 import logging
 
@@ -11,7 +11,7 @@ import asyncio
 
 app = FastAPI()
 
-logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Functions to split tiles
 def lat_lon_to_tile(latitude, longitude, zoom):
@@ -30,7 +30,7 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/process/")
-async def process_queue(job_id: str):
+async def process_queue(job_id: str, background_tasks: BackgroundTasks):
     logging.info(f"Processing queue with id: {job_id}")
 
     queue_client = get_queue_client(job_id)
@@ -67,8 +67,6 @@ async def process_queue(job_id: str):
             # Update job status to failed
             await set_job_status(job_id, "error")
 
-    asyncio.create_task(process_images())
+    background_tasks.add_task(process_images)
 
     return {"message": "Processing job with id: " + job_id}
-
-

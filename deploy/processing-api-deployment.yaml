@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: processing-api-deployment
 spec:
-  replicas: 3
+  replicas: 10
   selector:
     matchLabels:
       app: processing-api
@@ -22,5 +22,5 @@ spec:
             cpu: "2"
             memory: "4Gi"
           limits:
-            cpu: "3" 
-            memory: "6Gi" 
+            cpu: "3"
+            memory: "6Gi"
