@@ -1,7 +1,7 @@
 "use client";
 
 import Drawer from "@/components/Drawer";
-import InfoStep from "@/components/InfoStep";
+import InfoStep, { FormValues } from "@/components/InfoStep";
 import InteractiveMap from "@/components/InteractiveMap";
 import ModelLoading from "@/components/ModelLoading";
 import ModelResults from "@/components/ModelResults";
@@ -10,14 +10,12 @@ import { getJob, startModel } from "@/lib/apiCalls";
 import useJobStore from "@/lib/store";
 import { Job, Location, ModelRequest } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { SubmitHandler } from "react-hook-form";
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [jobId, setJobId] = useState<string | null>(null);
-
-  // Store states
-  const { job, setJob, clearJob } = useJobStore();
 
   // Location states
   const [location, setLocation] = useState<Location | null>(null);
@@ -28,6 +26,9 @@ export default function Home() {
     zoom: 11,
   });
 
+  // Store states
+  const { job, setJob, clearJob } = useJobStore();
+
   const mutation = useMutation({
     mutationFn: (body: ModelRequest) => startModel(body),
     onSuccess({ jobId }) {
@@ -35,10 +36,10 @@ export default function Home() {
     },
   });
 
-  const { data: jobData} = useQuery<Job | null>({
+  const { data: jobData } = useQuery<Job | null>({
     queryKey: ["job", jobId ?? job?.id],
     queryFn: () => getJob(jobId ?? job!.id),
-    enabled: (!!jobId || !!job) && (job?.status !== "completed"),
+    enabled: (!!jobId || !!job) && job?.status !== "completed",
     refetchInterval: 10000,
     placeholderData: job ?? null,
   });
@@ -46,48 +47,85 @@ export default function Home() {
   // Set drawer open when job is present
   useEffect(() => {
     if (job) {
-      setDrawerOpen(true);
-      setJobId(null);
-      // Set location and scale value when job is present
-      if (!location) {
-        setViewport({ latitude: job.coordinates[0], longitude: job.coordinates[1], zoom: 11 });
-        setLocation({ latitude: job.coordinates[0], longitude: job.coordinates[1] });
-        setScaleValue(job.radius / 1000);
-      }
+      initDrawerWithJob();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job])
+  }, [job]);
 
   // Update job state when jobData changes
   useEffect(() => {
     if (jobData) {
       setJob(jobData);
     }
-  }, [jobData, setJob])
+  }, [jobData, setJob]);
+
+  // Initialize drawer open when job is present
+  const initDrawerWithJob = () => {
+    setDrawerOpen(true);
+    setJobId(null);
+
+    // Set location and scale value
+    if (!location) {
+      setViewport({
+        latitude: job!.coordinates[0],
+        longitude: job!.coordinates[1],
+        zoom: 11,
+      });
+      setLocation({
+        latitude: job!.coordinates[0],
+        longitude: job!.coordinates[1],
+      });
+      setScaleValue(job!.radius / 1000);
+    }
+  };
 
   // Handle select location
-  const handleSelect = () => {
+  const handleSelect = useCallback(() => {
     setJobId(null);
     clearJob();
     setDrawerOpen(true);
-  };
+  }, [clearJob]);
 
   // Handle submit start model
-  const handleSubmit = () => {
+  const handleSubmit: SubmitHandler<FormValues> = ({ email }) => {
     if (!location) return;
 
     mutation.mutate({
       latitude: location.latitude,
       longitude: location.longitude,
       radius: Math.floor(scaleValue * 1000),
+      email,
     });
   };
 
   // Handle clear results
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setJobId(null);
     clearJob();
     setDrawerOpen(false);
+  }, [clearJob]);
+
+  // Render correct component based on status of the process
+  const renderDrawerContent = () => {
+    if (mutation.isPending) {
+      return <ModelLoading />;
+    }
+    if (!job && !jobId) {
+      return <InfoStep onSubmit={handleSubmit} />;
+    }
+    if (job?.status === "completed") {
+      return <ModelResults results={job} onClear={handleClear} />;
+    }
+    return <ModelStatus status={job ? job.status : "generating"} />;
+  };
+
+  // Check if the process is loading
+  const isLoading = () => {
+    return (
+      mutation.isPending ||
+      !!jobId ||
+      (!!job && (job.status === "generating" || job.status === "processing"))
+    );
   };
 
   // Show error message when mutation is error
@@ -100,15 +138,7 @@ export default function Home() {
   return (
     <div className="relative h-full overflow-hidden">
       <Drawer open={drawerOpen} className="bg-white">
-        {mutation.isPending ? (
-          <ModelLoading />
-        ) : (!job && !jobId) ? (
-          <InfoStep onSubmit={handleSubmit} />
-        ) : job?.status === "completed" ? (
-          <ModelResults results={job} onClear={handleClear} />
-        ) : (
-          <ModelStatus status={job ? job.status : "generating"} />
-        )}
+        {renderDrawerContent()}
       </Drawer>
       <InteractiveMap
         location={location}
@@ -119,7 +149,7 @@ export default function Home() {
         setViewport={setViewport}
         drawerOpen={drawerOpen}
         onSelect={handleSelect}
-        loading={mutation.isPending || !!jobId || (!!job && (job.status === "generating" || job.status === "processing"))}
+        loading={isLoading()}
       />
     </div>
   );

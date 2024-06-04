@@ -13,15 +13,6 @@ interface WrapperProps {
 }
 
 const ModelResults: React.FC<ResultsProps> = ({ results, onClear }) => {
-  const flatRoofPercentage = () => {
-    // Calculate ratio of the total surface area of sloped roofs for every flat roof
-    const percentage = (results.totalSurfaceAreaFlatRoofs / (results.totalSurfaceAreaSlopedRoofs + results.totalSurfaceAreaFlatRoofs)) * 100;
-
-    return Math.round(percentage);
-  };
-
-  console.log(results);
-
   return (
     <div className="w-full h-full flex flex-col justify-between">
       <div>
@@ -48,7 +39,7 @@ const ModelResults: React.FC<ResultsProps> = ({ results, onClear }) => {
           </ResultWrapper>
           <ResultWrapper>
             <ResultTitle>Percentage platte daken</ResultTitle>
-            <ResultValue>{flatRoofPercentage()}%</ResultValue>
+            <ResultValue>{Math.round(results.ratioFlatRoofs * 100)}%</ResultValue>
           </ResultWrapper>
         </div>
       </div>
