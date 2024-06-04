@@ -16,6 +16,7 @@ const config: Config = {
       colors: {
         "primary-orange": "#DE6C27",
         "primary-orange-alpha": "#DE6C2780",
+        "light-orange": "#eeb592",
         "primary-text": "#202020",
         "secondary-text": "#4A4949",
         "light-gray": "#D4D4D4",

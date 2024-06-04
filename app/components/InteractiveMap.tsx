@@ -19,15 +19,22 @@ import { MapLayerMouseEvent } from "mapbox-gl";
 import Pin from "./Icons/Pin";
 import Radius from "./MapControl/Radius";
 
+interface Viewport {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
 interface InteractiveMapProps {
   location: Location | null;
   setLocation: (location: Location | null) => void;
   scaleValue: number;
   setScaleValue: (scaleValue: number) => void;
+  viewport: Viewport;
+  setViewport: (viewport: Viewport) => void;
   drawerOpen: boolean;
   onSelect: () => void;
   loading?: boolean;
-  clearResults: () => void;
 }
 
 const TOKEN = process.env.MAPBOX_TOKEN;
@@ -41,15 +48,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   setLocation,
   scaleValue,
   setScaleValue,
+  viewport,
+  setViewport,
   drawerOpen,
   onSelect,
   loading,
 }) => {
-  const [viewport, setViewport] = useState({
-    latitude: 50.82307,
-    longitude: 3.32653,
-    zoom: 11,
-  });
 
   const mapRef = useRef<MapRef | null>(null);
 
@@ -115,6 +119,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             variant="primary"
             onClick={onSelect}
             className="absolute right-8 bottom-8"
+            disabled={!location}
           >
             Selecteer
           </Button>

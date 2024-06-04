@@ -8,13 +8,12 @@ import ModelResults from "@/components/ModelResults";
 import ModelStatus from "@/components/ModelStatus";
 import { getJob, startModel } from "@/lib/apiCalls";
 import useJobStore from "@/lib/store";
-import { Job, Location, ModelRequest, Results } from "@/lib/types";
-import { Mutation, useMutation, useQuery } from "@tanstack/react-query";
+import { Job, Location, ModelRequest } from "@/lib/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [results, setResults] = useState<Results | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
 
   // Store states
@@ -23,6 +22,11 @@ export default function Home() {
   // Location states
   const [location, setLocation] = useState<Location | null>(null);
   const [scaleValue, setScaleValue] = useState<number>(2.5);
+  const [viewport, setViewport] = useState({
+    latitude: 50.82307,
+    longitude: 3.32653,
+    zoom: 11,
+  });
 
   const mutation = useMutation({
     mutationFn: (body: ModelRequest) => startModel(body),
@@ -43,8 +47,15 @@ export default function Home() {
   useEffect(() => {
     if (job) {
       setDrawerOpen(true);
-      // TODO: Set location, scaleValue and viewport on the map
+      setJobId(null);
+      // Set location and scale value when job is present
+      if (!location) {
+        setViewport({ latitude: job.coordinates[0], longitude: job.coordinates[1], zoom: 11 });
+        setLocation({ latitude: job.coordinates[0], longitude: job.coordinates[1] });
+        setScaleValue(job.radius / 1000);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job])
 
   // Update job state when jobData changes
@@ -56,7 +67,8 @@ export default function Home() {
 
   // Handle select location
   const handleSelect = () => {
-    setResults(null);
+    setJobId(null);
+    clearJob();
     setDrawerOpen(true);
   };
 
@@ -75,7 +87,6 @@ export default function Home() {
   const handleClear = () => {
     setJobId(null);
     clearJob();
-    setResults(null);
     setDrawerOpen(false);
   };
 
@@ -89,21 +100,14 @@ export default function Home() {
   return (
     <div className="relative h-full overflow-hidden">
       <Drawer open={drawerOpen} className="bg-white">
-        {/* {mutation.isPending ? (
-          <ModelLoading />
-        ) : results ? (
-          <ModelResults results={results} onClear={handleClear} />
-        ) : (
-          <InfoStep onSubmit={handleSubmit} />
-        )} */}
         {mutation.isPending ? (
           <ModelLoading />
-        ) : !job ? (
+        ) : (!job && !jobId) ? (
           <InfoStep onSubmit={handleSubmit} />
-        ) : job.status === "completed" ? (
+        ) : job?.status === "completed" ? (
           <ModelResults results={job} onClear={handleClear} />
         ) : (
-          <ModelStatus status={job.status} />
+          <ModelStatus status={job ? job.status : "generating"} />
         )}
       </Drawer>
       <InteractiveMap
@@ -111,10 +115,11 @@ export default function Home() {
         setLocation={setLocation}
         scaleValue={scaleValue}
         setScaleValue={setScaleValue}
+        viewport={viewport}
+        setViewport={setViewport}
         drawerOpen={drawerOpen}
         onSelect={handleSelect}
-        loading={mutation.isPending}
-        clearResults={handleClear}
+        loading={mutation.isPending || !!jobId || (!!job && (job.status === "generating" || job.status === "processing"))}
       />
     </div>
   );
