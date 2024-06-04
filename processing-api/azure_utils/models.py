@@ -26,7 +26,7 @@ class Job(BaseModel):
         self.totalSurfaceAreaFlatRoofs += results.total_surface_area_flat_roofs
         self.totalSurfaceAreaSlopedRoofs += results.total_surface_area_sloped_roofs
         self.totalCircumferenceFlatRoofs += results.total_circumference_flat_roofs
-        if(self.totalFlatRoofs > 0):
-            self.ratioFlatRoofs = self.totalFlatRoofs / (self.totalFlatRoofs + self.totalSlopedRoofs)
+        if(self.totalSurfaceAreaFlatRoofs > 0):
+            self.ratioFlatRoofs = self.totalSurfaceAreaFlatRoofs / (self.totalSurfaceAreaFlatRoofs + self.totalSurfaceAreaSlopedRoofs)
         else:
             self.ratioFlatRoofs = 0

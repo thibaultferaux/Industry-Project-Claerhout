@@ -21,6 +21,7 @@ export interface ModelRequest {
   latitude: number;
   longitude: number;
   radius: number;
+  email: string;
 }
 
 export interface ModelResponse {
@@ -33,6 +34,7 @@ type Status = "error" | "generating" | "processing" | "completed";
 export interface Job {
   id: string;
   status: Status;
+  email: string;
   coordinates: [number, number];
   radius: number;
   createdAt: Date;
@@ -43,4 +45,5 @@ export interface Job {
   totalSurfaceAreaFlatRoofs: number;
   totalSurfaceAreaSlopedRoofs: number;
   totalCircumferenceFlatRoofs: number;
+  ratioFlatRoofs: number;
 }
