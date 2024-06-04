@@ -15,3 +15,9 @@ export const kmToPixelsAtMaxZoom = (km: number, zoom: number) => {
 
 export const metersToPixelsAtMaxZoom = (meters: number, latitude: number) =>
   meters / (78271.484 / 2 ** 20) / Math.cos((latitude * Math.PI) / 180);
+
+export const formatResult = (value: number) => {
+  const roundedValue = Math.round(value);
+  // Set a space as thousands separator
+  return roundedValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
