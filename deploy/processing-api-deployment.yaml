@@ -14,9 +14,6 @@ spec:
     spec:
       containers:
       - name: processing-api
-        image: your-image-name
-        resources:
-          requests:
-            cpu: "500m"  # Request 500 millicores of CPU
-          limits:
-            cpu: "1000m"  # Limit the CPU to 1000 millicores
+        image: thibaultferaux/industry-project-roof-detection-processing-api:latest
+        ports:
+        - containerPort: 80
