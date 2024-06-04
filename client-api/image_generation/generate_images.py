@@ -115,7 +115,7 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     params = {
         "job_id": job_id
     }
-    response = requests.post(f"http://roof-detection-processing-api:8000/process", params=params)
+    response = requests.post(f"http://roof-detection-processing-api:8000/process/", params=params)
 
     logging.info(f"Processing API response: {response.json()}")
 
