@@ -1,8 +1,8 @@
-import { Results } from "@/lib/types";
+import { Job } from "@/lib/types";
 import Button from "./Button";
 
 interface ResultsProps {
-  results: Results;
+  results: Job;
   onClear: () => void;
 }
 
@@ -14,7 +14,7 @@ const ModelResults: React.FC<ResultsProps> = ({ results, onClear }) => (
         In de gewenste regio heeft het model de volgende resultaten gevonden:
       </p>
       <div className="mt-16 flex flex-col items-center">
-        <p className="text-h1 leading-none">{results.flatRoofs}</p>
+        <p className="text-h1 leading-none">135</p>
         <p className="text-secondary-text text-h3">platte daken</p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "./globals.css";
 import SiteLayout from "@/components/SiteLayout";
+import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -21,10 +22,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl">
-      <body className={openSans.className}>
-        <SiteLayout>{children}</SiteLayout>
-      </body>
-    </html>
+    <ReactQueryClientProvider>
+      <html lang="nl">
+        <body className={openSans.className}>
+          <SiteLayout>{children}</SiteLayout>
+        </body>
+      </html>
+    </ReactQueryClientProvider>
   );
 }
