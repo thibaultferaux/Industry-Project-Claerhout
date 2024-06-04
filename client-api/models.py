@@ -4,3 +4,4 @@ class ModelRequest(BaseModel):
     latitude: float
     longitude: float
     radius: int
+    email: str
