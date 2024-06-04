@@ -17,3 +17,10 @@ spec:
         image: thibaultferaux/industry-project-roof-detection-processing-api:latest
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+          limits:
+            cpu: "3" 
+            memory: "6Gi" 

@@ -15,4 +15,4 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 60  # Adjust this percentage based on your needs
+        averageUtilization: 40
