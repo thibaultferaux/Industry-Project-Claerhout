@@ -1,5 +1,6 @@
 import os
 import gc
+import psutil
 import numpy as np
 from io import BytesIO
 from PIL import Image, ImageDraw
@@ -22,60 +23,48 @@ load_dotenv()
 
 azure_maps_key = os.getenv('AZURE_MAPS_KEY')
 
-async def fetch_tile(x: float, y: float, zoom: int) -> Image.Image:
+def log_memory_usage(step: str):
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    logging.info(f"{step} - Memory Usage: RSS = {mem_info.rss / (1024 ** 2):.2f} MB, VMS = {mem_info.vms / (1024 ** 2):.2f} MB")
+
+async def fetch_tile(x: float, y: float, zoom: int) -> np.ndarray:
     """Fetch a map tile from Azure Maps."""
     url = f"https://atlas.microsoft.com/map/tile?subscription-key={azure_maps_key}&api-version=2022-08-01&tilesetId=microsoft.imagery&zoom={zoom}&x={x}&y={y}&format=png"
     response = await asyncio.to_thread(requests.get, url)
     if response.status_code == 200:
-        return Image.open(BytesIO(response.content))
+        image = np.array(Image.open(BytesIO(response.content)))
+        logging.info(f"Tile size: {image.shape}")
+        return image
     return None
 
-def apply_circular_mask(image: Image.Image, center: Tuple[int, int], radius: int) -> Image.Image:
+def apply_circular_mask(array: np.ndarray, center: Tuple[int, int], radius: int) -> np.ndarray:
     """Apply a black circular mask to the image."""
     # Create a mask with the same size as the image, filled with white
-    mask = Image.new('L', image.size, 255)
-    draw = ImageDraw.Draw(mask)
+    y, x = np.ogrid[:array.shape[0], :array.shape[1]]
+    mask = (x - center[0]) ** 2 + (y - center[1]) ** 2 > radius ** 2
+    array[mask] = 0
+    return array
 
-    # Draw a black circle on the mask
-    draw.ellipse((center[0] - radius, center[1] - radius, center[0] + radius, center[1] + radius), fill=0)
-
-    # Create a black image with the same size as the original image
-    black_image = Image.new('RGB', image.size, (0, 0, 0))
-
-    # Combine the original image with the black image using the mask
-    masked_image = Image.composite(black_image, image, mask)
-
-    return masked_image
-
-def split_image(image: Image.Image, tile_size: int) -> List[Image.Image]:
+def split_image(mmap_array, tile_size: int) -> List[np.ndarray]:
     """Split a large image into smaller tiles."""
     tiles = []
-
-    # convert image to numpy array and memorymap it to avoid memory issues
-    image_array = np.array(image)
-    mmap_array = np.memmap('image_mmap.dat', dtype=image_array.dtype, mode='w+', shape=image_array.shape)
-    mmap_array[:] = image_array[:]
-
-    num_tiles_x = image.width // tile_size
-    num_tiles_y = image.height // tile_size
+    num_tiles_x = mmap_array.shape[1] // tile_size
+    num_tiles_y = mmap_array.shape[0] // tile_size
     for x in range(num_tiles_x):
         for y in range(num_tiles_y):
-            box = (x * tile_size, y * tile_size, (x + 1) * tile_size, (y + 1) * tile_size)
-            tile_array = mmap_array[box[1]:box[3], box[0]:box[2]]
-            tile = Image.fromarray(tile_array)
-            if tile.getbbox():  # Check if tile is not completely empty
-                tiles.append(tile)
+            tile = mmap_array[y * tile_size: (y + 1) * tile_size, x * tile_size: (x + 1) * tile_size]
+            if tile.any():  # Check if tile is not completely empty
+                tiles.append(tile.copy())
             # explicitly call garbage collector to avoid memory issues
             gc.collect()
-
-    del mmap_array
-
-    image.close()
 
     return tiles
 
 async def generate_tiles(latitude: float, longitude: float, radius_meters: int, container_client: ContainerClient, queue_client: QueueClient, job_id: str) -> Dict[str, List[str]]:
     logging.info(f"Generating tiles for latitude: {latitude}, longitude: {longitude}, radius: {radius_meters} meters")
+
+    log_memory_usage("Start generating tiles")
 
     """Generate tiles for a given latitude, longitude, and radius, and upload them to Azure Blob Storage."""
     target_zoom = 19
@@ -86,7 +75,8 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     # center_pixel_x = ((longitude + 180.0) / 360.0 * (2 ** target_zoom) % 1) * 256
     # center_pixel_y = ((1 - math.log(math.tan(math.radians(latitude)) + 1 / math.cos(math.radians(latitude))) / math.pi) / 2 * (2 ** target_zoom) % 1) * 256
 
-    stitched_image = Image.new('RGB', (stitched_image_size, stitched_image_size))
+    mmap_file = np.memmap('stitched_image.dat', dtype=np.uint8, mode='w+', shape=(stitched_image_size, stitched_image_size, 3))
+
     start_x = center_x_tile - stitched_image_size // (2 * 256)
     start_y = center_y_tile - stitched_image_size // (2 * 256)
 
@@ -99,28 +89,39 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     for x in range(start_x, start_x + stitched_image_size // 256 + 1):
         for y in range(start_y, start_y + stitched_image_size // 256 + 1):
-            tile_image = await fetch_tile(x, y, target_zoom)
-            if tile_image:
+            tile_array = await fetch_tile(x, y, target_zoom)
+            if tile_array is not None:
                 tiles_progress += 1
                 logging.info(f"Progress: {tiles_progress}/{len(x_range) * len(y_range)}")
-                stitched_image.paste(tile_image, ((x - start_x) * 256, (y - start_y) * 256))
-                # explicitly call garbage collector to avoid memory issues
-                tile_image.close()
+                # Calculate the exact position in mmap_file for the tile_array
+                tile_start_x = (x - start_x) * 256
+                tile_end_x = min(tile_start_x + min(tile_array.shape[1], 256), mmap_file.shape[1])
+                tile_start_y = (y - start_y) * 256
+                tile_end_y = min(tile_start_y + min(tile_array.shape[0], 256), mmap_file.shape[0])
+
+                logging.info(f"Tile start_x: {tile_start_x}, tile_end_x: {tile_end_x}, tile_start_y: {tile_start_y}, tile_end_y: {tile_end_y}, mmap_file shape: {mmap_file.shape}")
+
+                mmap_file[tile_start_y: tile_end_y, tile_start_x: tile_end_x] = tile_array[:tile_end_y - tile_start_y, :tile_end_x - tile_start_x]
                 gc.collect()
+
+    log_memory_usage("After fetching tiles")
 
     logging.info("Done fetching tiles. Applying circular mask and splitting into smaller tiles.")
 
     center = (stitched_image_size // 2, stitched_image_size // 2)
-    stitched_image = apply_circular_mask(stitched_image, center, radius_pixels)
+    mmap_file = apply_circular_mask(mmap_file, center, radius_pixels)
 
     logging.info("Applied circular mask to stitched image.")
 
-    tile_size_pixels = int(310 / 0.2986)
-    tiles = split_image(stitched_image, tile_size_pixels)
+    log_memory_usage("After applying circular mask")
 
-    # explicitly call garbage collector to avoid memory issues
-    stitched_image.close()
+    tile_size_pixels = int(310 / 0.2986)
+    tiles = split_image(mmap_file, tile_size_pixels)
+
+    del mmap_file
     gc.collect()
+
+    log_memory_usage("After splitting image into tiles")
 
     logging.info(f"Uploading {len(tiles)} tiles to Azure Blob Storage.")
 
@@ -135,6 +136,8 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     await asyncio.gather(*upload_tasks)
 
+    log_memory_usage("After uploading tiles to Azure Blob Storage")
+
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
     job = set_total_images(job_id, tiles_length)
@@ -146,5 +149,7 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     response = requests.post(f"http://roof-detection-processing-api:8000/process/", params=params)
 
     logging.info(f"Processing API response: {response.json()}")
+
+    log_memory_usage("End of generate_tiles")
 
     return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": len(tiles)}

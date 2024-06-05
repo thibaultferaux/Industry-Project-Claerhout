@@ -1,4 +1,6 @@
 import os
+import gc
+import numpy as np
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.storage.queue import QueueClient
 from dotenv import load_dotenv
@@ -14,13 +16,20 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_str)
 def create_blob_container(container_name:str) -> ContainerClient:
     return blob_service_client.create_container(container_name, public_access="container")
 
-async def upload_image_to_blob(image: Image.Image, filename: str, container_client: ContainerClient, queue_client: QueueClient) -> None:
+async def upload_image_to_blob(image: np.ndarray, filename: str, container_client: ContainerClient, queue_client: QueueClient) -> None:
     blob_client = container_client.get_blob_client(filename)
     with BytesIO() as output:
-        image.save(output, format='PNG')
+        tile_image = Image.fromarray(image)
+        tile_image.save(output, format='PNG')
         output.seek(0)
         blob_client.upload_blob(output.getvalue(), overwrite=True)
     # Get blob URL
     blob_url = blob_client.url
+
+    # Clean up memory
+    tile_image.close()
+    output.close()
+    gc.collect()
+
     # Send blob URL to queue
     queue_client.send_message(blob_url)

@@ -8,3 +8,4 @@ pydantic
 azure-storage-queue
 azure-cosmos
 azure-storage-blob
+psutil
