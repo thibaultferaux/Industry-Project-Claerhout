@@ -11,6 +11,7 @@ from azure.storage.blob import ContainerClient
 from azure.storage.queue import QueueClient
 import logging
 import requests
+import shutil
 
 from image_generation.utils import meters_to_pixels, lat_lon_to_tile
 from azure_utils.blob_storage import upload_image_to_blob
@@ -22,12 +23,15 @@ load_dotenv()
 
 azure_maps_key = os.getenv('AZURE_MAPS_KEY')
 
-async def fetch_tile(x: float, y: float, zoom: int) -> Image.Image:
+async def fetch_tile(x: float, y: float, zoom: int, tile_dir: str) -> Image.Image:
     """Fetch a map tile from Azure Maps."""
     url = f"https://atlas.microsoft.com/map/tile?subscription-key={azure_maps_key}&api-version=2022-08-01&tilesetId=microsoft.imagery&zoom={zoom}&x={x}&y={y}&format=png"
     response = await asyncio.to_thread(requests.get, url)
     if response.status_code == 200:
-        return Image.open(BytesIO(response.content))
+        tile_path = os.path.join(tile_dir, f"tile_{x}_{y}.png")
+        with open(tile_path, 'wb') as f:
+            f.write(response.content)
+        return tile_path
     return None
 
 def apply_circular_mask(image: Image.Image, center: Tuple[int, int], radius: int) -> Image.Image:
@@ -45,30 +49,29 @@ def apply_circular_mask(image: Image.Image, center: Tuple[int, int], radius: int
     # Combine the original image with the black image using the mask
     masked_image = Image.composite(black_image, image, mask)
 
+    black_image.close()
+    mask.close()
+    gc.collect()
+
     return masked_image
 
-def split_image(image: Image.Image, tile_size: int) -> List[Image.Image]:
+def split_image(image: Image.Image, tile_size: int, tile_dir: str) -> List[Image.Image]:
     """Split a large image into smaller tiles."""
     tiles = []
-
-    # convert image to numpy array and memorymap it to avoid memory issues
-    image_array = np.array(image)
-    mmap_array = np.memmap('image_mmap.dat', dtype=image_array.dtype, mode='w+', shape=image_array.shape)
-    mmap_array[:] = image_array[:]
 
     num_tiles_x = image.width // tile_size
     num_tiles_y = image.height // tile_size
     for x in range(num_tiles_x):
         for y in range(num_tiles_y):
             box = (x * tile_size, y * tile_size, (x + 1) * tile_size, (y + 1) * tile_size)
-            tile_array = mmap_array[box[1]:box[3], box[0]:box[2]]
-            tile = Image.fromarray(tile_array)
+            tile = image.crop(box)
             if tile.getbbox():  # Check if tile is not completely empty
-                tiles.append(tile)
+                tile_path = os.path.join(tile_dir, f"tile_{x}_{y}.png")
+                tile.save(tile_path)
+                tiles.append(tile_path)
             # explicitly call garbage collector to avoid memory issues
+            tile.close()
             gc.collect()
-
-    del mmap_array
 
     image.close()
 
@@ -96,19 +99,29 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     logging.info(f"Fetching tiles for x_range: {x_range}, y_range: {y_range}")
 
     tiles_progress = 0
+    tile_dir = job_id
+    os.makedirs(tile_dir, exist_ok=True)
+
+    tile_paths = []
 
     for x in range(start_x, start_x + stitched_image_size // 256 + 1):
         for y in range(start_y, start_y + stitched_image_size // 256 + 1):
-            tile_image = await fetch_tile(x, y, target_zoom)
-            if tile_image:
+            tile_path = await fetch_tile(x, y, target_zoom, tile_dir)
+            if tile_path:
+                tile_paths.append((tile_path, ((x - start_x) * 256, (y - start_y) * 256)))
                 tiles_progress += 1
                 logging.info(f"Progress: {tiles_progress}/{len(x_range) * len(y_range)}")
-                stitched_image.paste(tile_image, ((x - start_x) * 256, (y - start_y) * 256))
-                # explicitly call garbage collector to avoid memory issues
-                tile_image.close()
                 gc.collect()
 
-    logging.info("Done fetching tiles. Applying circular mask and splitting into smaller tiles.")
+    logging.info("Done fetching tiles. Stitching image.")
+
+    for tile_path, paste_position in tile_paths:
+        tile_image = Image.open(tile_path)
+        stitched_image.paste(tile_image, paste_position)
+        tile_image.close()
+        gc.collect()
+
+    logging.info("Applying circular mask and splitting into smaller tiles")
 
     center = (stitched_image_size // 2, stitched_image_size // 2)
     stitched_image = apply_circular_mask(stitched_image, center, radius_pixels)
@@ -116,24 +129,25 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     logging.info("Applied circular mask to stitched image.")
 
     tile_size_pixels = int(310 / 0.2986)
-    tiles = split_image(stitched_image, tile_size_pixels)
-
-    # explicitly call garbage collector to avoid memory issues
+    split_tile_paths = split_image(stitched_image, tile_size_pixels, tile_dir)
     stitched_image.close()
     gc.collect()
 
-    logging.info(f"Uploading {len(tiles)} tiles to Azure Blob Storage.")
+    tiles_length = len(split_tile_paths)
 
-    tiles_length = len(tiles)
+    logging.info(f"Uploading {tiles_length} tiles to Azure Blob Storage.")
 
     upload_tasks = []
-    for idx, tile in enumerate(tiles):
-        filename = f'tile_{idx}.png'
+    for tile_path in split_tile_paths:
+        filename = os.path.basename(tile_path)
+        tile = Image.open(tile_path)
         upload_tasks.append(upload_image_to_blob(tile, filename, container_client, queue_client))
-        # explicitly call garbage collector to avoid memory issues
         gc.collect()
 
     await asyncio.gather(*upload_tasks)
+
+    # remove the tile directory
+    shutil.rmtree(tile_dir)
 
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
@@ -147,4 +161,4 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     logging.info(f"Processing API response: {response.json()}")
 
-    return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": len(tiles)}
+    return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": job.total_images}
