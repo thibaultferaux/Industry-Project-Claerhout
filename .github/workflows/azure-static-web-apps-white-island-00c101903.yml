@@ -31,6 +31,9 @@ jobs:
           app_location: "./app" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
+        env:
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
