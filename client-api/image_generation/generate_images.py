@@ -93,6 +93,8 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
                 logging.info(f"Tile start_x: {tile_start_x}, tile_end_x: {tile_end_x}, tile_start_y: {tile_start_y}, tile_end_y: {tile_end_y}, mmap_file shape: {mmap_file.shape}")
 
                 mmap_file[tile_start_y: tile_end_y, tile_start_x: tile_end_x] = tile_array[:tile_end_y - tile_start_y, :tile_end_x - tile_start_x]
+
+                del tile_array
                 gc.collect()
 
     logging.info("Done fetching tiles. Applying circular mask and splitting into smaller tiles.")
