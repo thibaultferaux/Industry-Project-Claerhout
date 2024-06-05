@@ -1,4 +1,6 @@
 import os
+import gc
+import numpy as np
 from io import BytesIO
 from PIL import Image, ImageDraw
 import requests
@@ -48,14 +50,28 @@ def apply_circular_mask(image: Image.Image, center: Tuple[int, int], radius: int
 def split_image(image: Image.Image, tile_size: int) -> List[Image.Image]:
     """Split a large image into smaller tiles."""
     tiles = []
+
+    # convert image to numpy array and memorymap it to avoid memory issues
+    image_array = np.array(image)
+    mmap_array = np.memmap('image_mmap.dat', dtype=image_array.dtype, mode='w+', shape=image_array.shape)
+    mmap_array[:] = image_array[:]
+
     num_tiles_x = image.width // tile_size
     num_tiles_y = image.height // tile_size
     for x in range(num_tiles_x):
         for y in range(num_tiles_y):
             box = (x * tile_size, y * tile_size, (x + 1) * tile_size, (y + 1) * tile_size)
-            tile = image.crop(box)
+            tile_array = mmap_array[box[1]:box[3], box[0]:box[2]]
+            tile = Image.fromarray(tile_array)
             if tile.getbbox():  # Check if tile is not completely empty
                 tiles.append(tile)
+            # explicitly call garbage collector to avoid memory issues
+            gc.collect()
+
+    del mmap_array
+
+    image.close()
+
     return tiles
 
 async def generate_tiles(latitude: float, longitude: float, radius_meters: int, container_client: ContainerClient, queue_client: QueueClient, job_id: str) -> Dict[str, List[str]]:
@@ -88,6 +104,9 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
                 tiles_progress += 1
                 logging.info(f"Progress: {tiles_progress}/{len(x_range) * len(y_range)}")
                 stitched_image.paste(tile_image, ((x - start_x) * 256, (y - start_y) * 256))
+                # explicitly call garbage collector to avoid memory issues
+                tile_image.close()
+                gc.collect()
 
     logging.info("Done fetching tiles. Applying circular mask and splitting into smaller tiles.")
 
@@ -99,17 +118,26 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     tile_size_pixels = int(310 / 0.2986)
     tiles = split_image(stitched_image, tile_size_pixels)
 
+    # explicitly call garbage collector to avoid memory issues
+    stitched_image.close()
+    gc.collect()
+
     logging.info(f"Uploading {len(tiles)} tiles to Azure Blob Storage.")
+
+    tiles_length = len(tiles)
 
     upload_tasks = []
     for idx, tile in enumerate(tiles):
         filename = f'tile_{idx}.png'
         upload_tasks.append(upload_image_to_blob(tile, filename, container_client, queue_client))
+        # explicitly call garbage collector to avoid memory issues
+        gc.collect()
+
     await asyncio.gather(*upload_tasks)
 
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
-    job = set_total_images(job_id, len(tiles))
+    job = set_total_images(job_id, tiles_length)
 
     # Call the processing API to start processing the images
     params = {
