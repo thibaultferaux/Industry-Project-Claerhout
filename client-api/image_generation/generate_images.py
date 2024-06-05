@@ -1,6 +1,5 @@
 import os
 import gc
-import psutil
 import numpy as np
 from io import BytesIO
 from PIL import Image, ImageDraw
@@ -23,19 +22,13 @@ load_dotenv()
 
 azure_maps_key = os.getenv('AZURE_MAPS_KEY')
 
-def log_memory_usage(step: str):
-    process = psutil.Process(os.getpid())
-    mem_info = process.memory_info()
-    logging.info(f"{step} - Memory Usage: RSS = {mem_info.rss / (1024 ** 2):.2f} MB, VMS = {mem_info.vms / (1024 ** 2):.2f} MB")
-
 async def fetch_tile(x: float, y: float, zoom: int) -> np.ndarray:
     """Fetch a map tile from Azure Maps."""
     url = f"https://atlas.microsoft.com/map/tile?subscription-key={azure_maps_key}&api-version=2022-08-01&tilesetId=microsoft.imagery&zoom={zoom}&x={x}&y={y}&format=png"
     response = await asyncio.to_thread(requests.get, url)
     if response.status_code == 200:
-        image = np.array(Image.open(BytesIO(response.content)))
-        logging.info(f"Tile size: {image.shape}")
-        return image
+        with Image.open(BytesIO(response.content)) as img:
+            return np.asarray(img)
     return None
 
 def apply_circular_mask(array: np.ndarray, center: Tuple[int, int], radius: int) -> np.ndarray:
@@ -63,8 +56,6 @@ def split_image(mmap_array, tile_size: int) -> List[np.ndarray]:
 
 async def generate_tiles(latitude: float, longitude: float, radius_meters: int, container_client: ContainerClient, queue_client: QueueClient, job_id: str) -> Dict[str, List[str]]:
     logging.info(f"Generating tiles for latitude: {latitude}, longitude: {longitude}, radius: {radius_meters} meters")
-
-    log_memory_usage("Start generating tiles")
 
     """Generate tiles for a given latitude, longitude, and radius, and upload them to Azure Blob Storage."""
     target_zoom = 19
@@ -104,8 +95,6 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
                 mmap_file[tile_start_y: tile_end_y, tile_start_x: tile_end_x] = tile_array[:tile_end_y - tile_start_y, :tile_end_x - tile_start_x]
                 gc.collect()
 
-    log_memory_usage("After fetching tiles")
-
     logging.info("Done fetching tiles. Applying circular mask and splitting into smaller tiles.")
 
     center = (stitched_image_size // 2, stitched_image_size // 2)
@@ -113,15 +102,11 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     logging.info("Applied circular mask to stitched image.")
 
-    log_memory_usage("After applying circular mask")
-
     tile_size_pixels = int(310 / 0.2986)
     tiles = split_image(mmap_file, tile_size_pixels)
 
     del mmap_file
     gc.collect()
-
-    log_memory_usage("After splitting image into tiles")
 
     logging.info(f"Uploading {len(tiles)} tiles to Azure Blob Storage.")
 
@@ -136,8 +121,6 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     await asyncio.gather(*upload_tasks)
 
-    log_memory_usage("After uploading tiles to Azure Blob Storage")
-
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
     job = set_total_images(job_id, tiles_length)
@@ -149,7 +132,5 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
     response = requests.post(f"http://roof-detection-processing-api:8000/process/", params=params)
 
     logging.info(f"Processing API response: {response.json()}")
-
-    log_memory_usage("End of generate_tiles")
 
     return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": len(tiles)}
