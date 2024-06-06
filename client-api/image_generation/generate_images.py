@@ -23,10 +23,13 @@ load_dotenv()
 
 azure_maps_key = os.getenv('AZURE_MAPS_KEY')
 
-async def fetch_tile(x: float, y: float, zoom: int, tile_dir: str) -> Image.Image:
+# create a session for connection pooling
+session = requests.Session()
+
+async def fetch_tile(session, x: float, y: float, zoom: int, tile_dir: str) -> Image.Image:
     """Fetch a map tile from Azure Maps."""
     url = f"https://atlas.microsoft.com/map/tile?subscription-key={azure_maps_key}&api-version=2022-08-01&tilesetId=microsoft.imagery&zoom={zoom}&x={x}&y={y}&format=png"
-    response = await asyncio.to_thread(requests.get, url)
+    response = await asyncio.to_thread(session.get, url)
     if response.status_code == 200:
         tile_path = os.path.join(tile_dir, f"tile_{x}_{y}.png")
         with open(tile_path, 'wb') as f:
@@ -106,7 +109,7 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     for x in range(start_x, start_x + stitched_image_size // 256 + 1):
         for y in range(start_y, start_y + stitched_image_size // 256 + 1):
-            tile_path = await fetch_tile(x, y, target_zoom, tile_dir)
+            tile_path = await fetch_tile(session, x, y, target_zoom, tile_dir)
             if tile_path:
                 tile_paths.append((tile_path, ((x - start_x) * 256, (y - start_y) * 256)))
                 tiles_progress += 1
