@@ -31,3 +31,16 @@ export const getJob = async (jobId: string): Promise<Job> => {
     throw error;
   }
 };
+
+export const getJobs = async (): Promise<Job[]> => {
+  try {
+    const response = await axios.get(
+      `${API_URL}jobs`
+    );
+    console.log("Get jobs response", response.data)
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
