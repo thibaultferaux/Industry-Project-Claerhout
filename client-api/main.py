@@ -37,7 +37,7 @@ async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks):
 
     try:
         # Create new job in Cosms DB
-        job = create_job(coordinates, radius_meters,email)
+        job = await create_job(coordinates, radius_meters,email)
 
         # Create blob container in Azure Storage
         container_client = create_blob_container(job.id)

@@ -18,8 +18,18 @@ async def fetch_urls_from_queue(queue_client: QueueClient, batch_size: int = 5):
         urls = []
         for message in messages:
             urls.append(message.content)
+            logging.info(f"DELETING MESSAGE: {message.content}")
             queue_client.delete_message(message)
         return urls
     except Exception as e:
         logging.error(f"Error fetching urls from queue: {e}")
         return []
+
+def receive_job_from_queue(queue_client: QueueServiceClient):
+    message = queue_client.peek_messages(max_messages=1)
+    return message
+
+def delete_job_from_queue(queue_client: QueueServiceClient):
+    message = queue_client.receive_message()
+    queue_client.delete_message(message)
+    return

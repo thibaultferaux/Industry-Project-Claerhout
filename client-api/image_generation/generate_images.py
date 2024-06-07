@@ -1,7 +1,5 @@
 import os
 import gc
-import numpy as np
-from io import BytesIO
 from PIL import Image, ImageDraw
 import requests
 import asyncio
@@ -16,6 +14,7 @@ import shutil
 from image_generation.utils import meters_to_pixels, lat_lon_to_tile
 from azure_utils.blob_storage import upload_image_to_blob
 from azure_utils.cosmos import set_total_images
+from azure_utils.storage_queue import store_job_in_queue
 
 logging.basicConfig(level=logging.INFO)
 
@@ -154,14 +153,10 @@ async def generate_tiles(latitude: float, longitude: float, radius_meters: int, 
 
     logging.info("All tiles uploaded to Azure Blob Storage.")
 
-    job = set_total_images(job_id, tiles_length)
+    job = await set_total_images(job_id, tiles_length)
 
-    # Call the processing API to start processing the images
-    params = {
-        "job_id": job_id
-    }
-    response = requests.post(f"http://roof-detection-processing-api:8000/process/", params=params)
+    # Put the job_id in the jobs queue
+    logging.info(f"Putting job {job_id} in the queue.")
+    await store_job_in_queue(job_id)
 
-    logging.info(f"Processing API response: {response.json()}")
-
-    return {"message": f"Sattelite images generated for job: {job.id}", "totalImages": job.total_images}
+    return {"message": f"Sattelite images generated for job: {job.id}"}

@@ -1,7 +1,6 @@
 import os
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from dotenv import load_dotenv
-import numpy
 from PIL import Image
 from io import BytesIO
 
