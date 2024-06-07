@@ -4,7 +4,7 @@ services:
   roof-detection-client-api:
     build:
       context: ./client-api
-    image: thibaultferaux/industry-project-roof-detection-client-api
+    image: thibaultferaux/industry-project-roof-detection-client-api-store-img
     ports:
       - 8000:8000
     env_file:
