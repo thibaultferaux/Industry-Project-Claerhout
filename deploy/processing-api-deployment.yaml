@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: processing-api-deployment
 spec:
-  replicas: 10
+  replicas: 5
   selector:
     matchLabels:
       app: processing-api
@@ -15,12 +15,8 @@ spec:
       containers:
       - name: processing-api
         image: thibaultferaux/industry-project-roof-detection-processing-api:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
-        resources:
-          requests:
-            cpu: "2"
-            memory: "4Gi"
-          limits:
-            cpu: "3"
-            memory: "6Gi"
+      nodeSelector:
+        agentpool: userpool3
