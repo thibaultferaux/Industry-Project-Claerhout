@@ -2,7 +2,7 @@ from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import ModelRequest
-from azure_utils.cosmos import create_job, get_job
+from azure_utils.cosmos import create_job, get_job, get_jobs
 from azure_utils.blob_storage import create_blob_container
 from azure_utils.storage_queue import create_storage_queue
 from image_generation.generate_images import generate_tiles
@@ -55,3 +55,8 @@ async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks):
 async def job_status(job_id: str):
     job = get_job(job_id)
     return job
+
+@app.get("/jobs")
+async def jobs():
+    jobs = get_jobs()
+    return jobs

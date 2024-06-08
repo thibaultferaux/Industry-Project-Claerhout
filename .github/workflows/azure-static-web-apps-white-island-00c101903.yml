@@ -33,6 +33,7 @@ jobs:
           output_location: "" # Built app content directory - optional
         env:
           MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          AZURE_MAPS_KEY: ${{ secrets.AZURE_MAPS_KEY }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           ###### End of Repository/Build Configurations ######
 

@@ -37,7 +37,7 @@ export interface Job {
   email: string;
   coordinates: [number, number];
   radius: number;
-  createdAt: Date;
+  createdAt: string;
   totalImages: number;
   imagesProcessed: number;
   totalFlatRoofs: number;
