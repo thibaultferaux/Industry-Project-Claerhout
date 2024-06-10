@@ -60,7 +60,7 @@ async def process_queue(message: str, job_queue_client):
     job_id = message.content
     logging.info(f"Processing queue with id: {job_id}")
 
-    queue_client = get_queue_client(job_id)
+    queue_client = get_queue_client(f"job-{job_id}")
     container_client = get_container_client(job_id)
     error_client = get_error_queue_client()
 
@@ -70,6 +70,7 @@ async def process_queue(message: str, job_queue_client):
             if not urls:
                 logging.info(f"No more images to process for job {job_id}")
                 break
+            error_client.send_message(f"Processing {len(urls)} images for job {job_id}")
 
             # When urls are retrieved, process the images
             logging.info(f"Processing {len(urls)} images for job {job_id}")
