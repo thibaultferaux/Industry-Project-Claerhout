@@ -3,7 +3,7 @@ import Lottie from "lottie-react";
 
 const ModelLoading = () => (
   <div className="w-full h-full relative">
-    <h2 className="text-h2 mb-4">Aan het zoeken...</h2>
+    <h2 className="text-h2 mb-4 leading-tight md:leading-snug">Aan het zoeken...</h2>
     <div className="absolute inset-0 flex justify-center items-center flex-col pb-12">
       <Lottie
         animationData={LoadingAnimation}

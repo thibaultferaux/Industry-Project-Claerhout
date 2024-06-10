@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -22,14 +22,15 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={clsx(
-        className,
+      className={cn(
         {
-          "bg-primary-orange text-white disabled:bg-light-orange": variant === "primary",
+          "bg-primary-orange text-white disabled:bg-light-orange":
+          variant === "primary",
           "bg-white border-[1px] border-primary-orange text-primary-text disabled:bg-opacity-50":
-            variant === "secondary",
+          variant === "secondary",
         },
-        "px-5 py-2.5 text-small uppercase font-semibold disabled:cursor-not-allowed"
+        "px-5 py-2.5 text-small uppercase font-semibold disabled:cursor-not-allowed",
+        className
       )}
     >
       {children}

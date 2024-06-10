@@ -16,7 +16,7 @@ const ModelResults: React.FC<ResultsProps> = ({ results, onClear }) => {
   return (
     <div className="w-full h-full flex flex-col justify-between">
       <div>
-        <h2 className="text-h2 mb-4">Resultaten</h2>
+        <h2 className="text-h2 mb-4 leading-tight md:leading-snug">Resultaten</h2>
         <p className="text-secondary-text">
           In de gewenste regio heeft het model de volgende resultaten gevonden:
         </p>

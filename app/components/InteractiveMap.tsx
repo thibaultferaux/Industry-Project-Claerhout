@@ -54,7 +54,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSelect,
   loading,
 }) => {
-
   const mapRef = useRef<MapRef | null>(null);
 
   const handleClick = (evt: MapLayerMouseEvent) => {
@@ -69,7 +68,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     <div
       className={cn(
         "h-full border-2 bg-slate-100 border-primary-orange relative transition-all duration-700 ease-out-quint ml-auto",
-        { "w-2/3": drawerOpen, "w-full": !drawerOpen }
+        {
+          "hidden lg:block lg:w-[55%] xl:w-3/5 2xl:2/3": drawerOpen,
+          "block w-full": !drawerOpen,
+        }
       )}
     >
       <Map
@@ -108,29 +110,33 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               language="nl"
               fuzzyMatch
             />
-            <NavigationControl />
-            <GeolocateControl />
+            {typeof window !== "undefined" && window.innerWidth >= 768 && (
+              <>
+                <NavigationControl />
+                <GeolocateControl />
+              </>
+            )}
           </>
         )}
       </Map>
       {!loading ? (
-        <>
-          <Button
-            variant="primary"
-            onClick={onSelect}
-            className="absolute right-8 bottom-8"
-            disabled={!location}
-          >
-            Selecteer
-          </Button>
+        <div className="absolute left-2 bottom-8 right-2 space-y-3 md:left-8 md:bottom-8 md:right-8 md:flex md:justify-between md:items-end">
           <Scale
             value={scaleValue}
             setValue={setScaleValue}
             min={0.1}
             max={5.0}
-            className="absolute left-8 bottom-8 w-80"
+            className="w-full md:w-60 xl:w-80 transition-all duration-500 ease-out-quint"
           />
-        </>
+          <Button
+            variant="primary"
+            onClick={onSelect}
+            className="w-full md:w-auto"
+            disabled={!location}
+          >
+            Selecteer
+          </Button>
+        </div>
       ) : (
         <div className="absolute inset-0 bg-white bg-opacity-30 cursor-not-allowed" />
       )}

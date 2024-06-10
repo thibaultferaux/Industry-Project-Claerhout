@@ -25,13 +25,13 @@ const HistoryResult: React.FC<HistoryResultProps> = ({ result }) => {
       <div className="flex justify-between mb-2">
         <p className="text-h3">
           {data && `Regio ${data}`}
-          <span className="ml-4 text-sm text-secondary-text">
+          <span className="block sm:inline sm:ml-4 text-sm text-secondary-text">
             Straal: {formatFloat((result.radius / 1000).toFixed(1))}km
           </span>
         </p>
-        <p>{formatDate(result.createdAt)}</p>
+        <p className="text-right">{formatDate(result.createdAt)}</p>
       </div>
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <ResultGroup
           label="Aantal platte daken"
           value={result.totalFlatRoofs.toString()}
@@ -55,8 +55,8 @@ const HistoryResult: React.FC<HistoryResultProps> = ({ result }) => {
 
 const ResultGroup: React.FC<ResultGroupProps> = ({ label, value }) => (
   <div>
-    <p className="text-secondary-text">{label}</p>
-    <p className="leading-tight text-h2">{value}</p>
+    <p className="text-small xl:text-base text-secondary-text">{label}</p>
+    <p className="leading-tight text-h3 xl:text-h2">{value}</p>
   </div>
 );
 
