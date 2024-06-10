@@ -27,7 +27,7 @@ export default function ResultHistory() {
 
   return (
     <div className="w-full">
-      <h2 className="text-h2 mb-8">Vorige resultaten</h2>
+      <h2 className="text-h2 mb-4 md:mb-6">Vorige resultaten</h2>
       <div className="flex flex-col space-y-4 pb-24">{content()}</div>
     </div>
   );

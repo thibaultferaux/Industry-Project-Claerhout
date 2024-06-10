@@ -66,13 +66,15 @@ const StatusIndicatorItem: React.FC<StatusIndicatorItemProps> = ({
         <div
           className={cn(
             "absolute w-3 h-3 bg-white rounded-full mt-1.5 -left-1.5 border outline outline-2 outline-white",
-            stage === "current" ? "border-primary-orange-alpha border-t-primary-orange spinner" : "border-light-gray"
+            stage === "current"
+              ? "border-primary-orange-alpha border-t-primary-orange spinner"
+              : "border-light-gray"
           )}
         />
       )}
       <h4
         className={cn(
-          "mb-1 text-h3 font-light",
+          "text-h3 mb-1 font-light",
           stage === "current" ? "text-primary-orange" : "text-secondary-text"
         )}
       >

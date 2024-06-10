@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import SearchIcon from "./Icons/Search";
 
 interface LocationInputProps {

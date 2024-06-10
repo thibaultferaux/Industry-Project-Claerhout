@@ -5,6 +5,7 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "./globals.css";
 import SiteLayout from "@/components/SiteLayout";
 import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
+import { TailwindIndicator } from "@/components/TailwindIdicator";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({
       <html lang="nl">
         <body className={openSans.className}>
           <SiteLayout>{children}</SiteLayout>
+          <TailwindIndicator />
         </body>
       </html>
     </ReactQueryClientProvider>

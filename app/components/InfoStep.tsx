@@ -34,7 +34,7 @@ const InfoStep: React.FC<InfoStepProps> = ({ onSubmit }) => {
 
   return (
     <div className="w-full">
-      <h2 className="text-h2 mb-4">Platte daken herkennen in gewenste regio</h2>
+      <h2 className="text-h2 mb-4 leading-tight md:leading-snug">Platte daken herkennen in gewenste regio</h2>
       <p className="text-secondary-text">
         Klik op de onderstaande knop om het AI model te laten zoeken op het
         aantal platte daken in de ingevoerde regio. Dit kan enkele minuten

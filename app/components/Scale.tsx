@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 interface ScaleProps {
   value: number;
@@ -17,7 +17,7 @@ const Scale: React.FC<ScaleProps> = ({
 }) => {
   return (
     <div
-      className={clsx(className, "bg-white p-4 border-[1px] border-light-gray")}
+      className={cn("bg-white p-4 border-[1px] border-light-gray", className)}
     >
       <div className="flex justify-between">
         <p>Straal</p>
