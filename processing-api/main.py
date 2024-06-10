@@ -2,7 +2,7 @@ import math
 import logging
 from time import sleep
 
-from azure_utils.storage_queue import get_queue_client, fetch_urls_from_queue, receive_job_from_queue, delete_job_from_queue
+from azure_utils.storage_queue import get_queue_client, fetch_urls_from_queue, receive_job_from_queue, delete_job_from_queue, get_error_queue_client
 from azure_utils.cosmos import update_job_results, set_job_status
 from azure_utils.blob_storage import get_container_client
 from img_processing.processing import handle_image_batch
@@ -62,10 +62,11 @@ async def process_queue(message: str, job_queue_client):
 
     queue_client = get_queue_client(job_id)
     container_client = get_container_client(job_id)
+    error_client = get_error_queue_client()
 
     try:
         while True:
-            urls = await fetch_urls_from_queue(queue_client)
+            urls = await fetch_urls_from_queue(queue_client, error_client)
             if not urls:
                 logging.info(f"No more images to process for job {job_id}")
                 break
