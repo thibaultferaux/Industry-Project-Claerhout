@@ -65,7 +65,7 @@ async def process_queue(message: str, job_queue_client):
 
     try:
         while True:
-            urls = await fetch_urls_from_queue(queue_client, error_client)
+            urls = await fetch_urls_from_queue(queue_client)
             if not urls:
                 logging.info(f"No more images to process for job {job_id}")
                 break
