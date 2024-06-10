@@ -14,7 +14,7 @@ def get_queue_client(queue_name: str) -> QueueClient:
 
 async def fetch_urls_from_queue(queue_client: QueueClient, batch_size: int = 5):
     try:
-        messages = queue_client.receive_messages(max_messages=batch_size)
+        messages = queue_client.receive_messages(max_messages=batch_size, visibility_timeout=30)
         urls = []
         for message in messages:
             urls.append(message.content)
@@ -23,3 +23,12 @@ async def fetch_urls_from_queue(queue_client: QueueClient, batch_size: int = 5):
     except Exception as e:
         logging.error(f"Error fetching urls from queue: {e}")
         return []
+
+def receive_job_from_queue(queue_client: QueueServiceClient):
+    message = queue_client.peek_messages(max_messages=1)
+    return message
+
+def delete_job_from_queue(queue_client: QueueServiceClient):
+    message = queue_client.receive_message()
+    queue_client.delete_message(message)
+    return

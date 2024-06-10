@@ -27,11 +27,11 @@ const Scale: React.FC<ScaleProps> = ({
       </div>
       <input
         type="range"
-        value={value}
-        onChange={(e) => setValue(parseInt(e.target.value))}
+        value={value.toFixed(1)}
+        onChange={(e) => setValue(parseFloat(e.target.value))}
         min={min}
         max={max}
-        step={1}
+        step="0.1"
       />
     </div>
   );

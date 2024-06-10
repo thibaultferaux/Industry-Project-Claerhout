@@ -7,6 +7,7 @@ class Job(BaseModel):
     status: Literal['error', 'generating', 'processing', 'completed']
     coordinates: tuple[float, float]
     radius: int
+    email: str
     createdAt: datetime = datetime.now()
     totalImages: int = 0
     imagesProcessed: int = 0
@@ -15,3 +16,4 @@ class Job(BaseModel):
     totalSurfaceAreaFlatRoofs: float = 0
     totalSurfaceAreaSlopedRoofs: float = 0
     totalCircumferenceFlatRoofs: float = 0
+    ratioFlatRoofs: float = 0

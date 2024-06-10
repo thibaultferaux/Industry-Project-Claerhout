@@ -50,7 +50,7 @@ async def handle_image_batch(image_batch: List[str], container_client: Container
                             group_results.total_sloped_roofs += 1
                             group_results.total_surface_area_sloped_roofs += square_pixels_to_meters(mask_area)
 
-                    print("RESULTS AFTER SA AND AMOUNT", group_results.model_dump())
+                    logging.debug(f"Results after calculating surface area and amount of roofs: {group_results.model_dump()}")
 
                     logging.info(f"Calculating circumference of flat roofs")
                     # filter the results so only the flat roofs remain
@@ -68,12 +68,12 @@ async def handle_image_batch(image_batch: List[str], container_client: Container
                     #sum of all the perimeters of this image and add them to the total circumference of flat roofs
                     group_results.total_circumference_flat_roofs += pixels_to_meters(sum(perimeters))
 
-                    print("RESULTS AFTER CIRCUMFERENCE", group_results.model_dump())
+                    logging.debug(f"Results after calculating circumference of flat roofs: {group_results.model_dump()}")
 
                 except Exception as e:
                     logging.error(f"Error processing image {result.path} - error message: {str(e)}")
 
-        print("FINAL RESULTS", group_results.model_dump())
+        logging.debug(f"Final results: {group_results.model_dump()}")
 
         return group_results
 
