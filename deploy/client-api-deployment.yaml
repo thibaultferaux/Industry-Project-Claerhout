@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-api-deployment
+spec:
+  replicas: 1  
+  selector:
+    matchLabels:
+      app: client-api
+  template:
+    metadata:
+      labels:
+        app: client-api
+    spec:
+      containers:
+      - name: client-api
+        image: thibaultferaux/industry-project-roof-detection-client-api-store-img:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        envFrom:
+        - secretRef:
+            name: azure-secrets
+      nodeSelector:
+        agentpool: userpool3

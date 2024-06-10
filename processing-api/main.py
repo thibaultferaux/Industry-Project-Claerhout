@@ -21,7 +21,7 @@ smtp_port = os.getenv('SMTP_PORT')
 username = os.getenv('SMTP_USERNAME')
 password = os.getenv('SMTP_PASSWORD')
 
-logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Functions to split tiles
 def lat_lon_to_tile(latitude, longitude, zoom):

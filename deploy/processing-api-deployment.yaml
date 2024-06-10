@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processing-api-deployment
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: processing-api
+  template:
+    metadata:
+      labels:
+        app: processing-api
+    spec:
+      containers:
+      - name: processing-api
+        image: thibaultferaux/industry-project-roof-detection-processing-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        agentpool: userpool3
