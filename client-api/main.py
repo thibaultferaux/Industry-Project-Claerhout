@@ -38,12 +38,6 @@ def verify_api_key(x_api_key: str = Header(...)):
 async def root():
     return {"message": "Hello World"}
 
-@app.get("/debug/env")
-def get_env():
-    return {"API_KEY": os.getenv('API_KEY')}
-
-
-
 @app.post("/detect-roofs/")
 async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks, api_key: str = Security(verify_api_key)):
     latitude = body.latitude
