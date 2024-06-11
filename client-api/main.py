@@ -1,5 +1,8 @@
+import os
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Header, HTTPException, Security
+from starlette.status import HTTP_403_FORBIDDEN
 
 from models import ModelRequest
 from azure_utils.cosmos import create_job, get_job, get_jobs
@@ -23,12 +26,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+API_KEY = os.getenv('API_KEY')
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Invalid API Key")
+    return x_api_key
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+@app.get("/debug/env")
+def get_env():
+    return {"API_KEY": os.getenv('API_KEY')}
+
+
+
 @app.post("/detect-roofs/")
-async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks):
+async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks, api_key: str = Security(verify_api_key)):
     latitude = body.latitude
     longitude = body.longitude
     radius_meters = body.radius
@@ -53,11 +70,11 @@ async def detect_roofs(body: ModelRequest ,background_tasks: BackgroundTasks):
     return {"message": "Job created", "jobId": job.id}
 
 @app.get("/job-status/{job_id}")
-async def job_status(job_id: str):
+async def job_status(job_id: str, api_key: str = Security(verify_api_key)):
     job = get_job(job_id)
     return job
 
 @app.get("/jobs")
-async def jobs():
+async def jobs(api_key: str = Security(verify_api_key)):
     jobs = get_jobs()
     return jobs
