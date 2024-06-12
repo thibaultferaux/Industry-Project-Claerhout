@@ -13,10 +13,13 @@ spec:
         app: processing-api
     spec:
       containers:
-      - name: processing-api
-        image: thibaultferaux/industry-project-roof-detection-processing-api:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
+        - name: processing-api
+          image: thibaultferaux/industry-project-roof-detection-processing-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          envFrom:
+            - secretRef:
+                name: azure-secrets-processing
       nodeSelector:
         agentpool: userpool3

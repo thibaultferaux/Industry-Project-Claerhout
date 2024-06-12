@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: client-api-deployment
 spec:
-  replicas: 1  
+  replicas: 1
   selector:
     matchLabels:
       app: client-api
@@ -20,6 +20,6 @@ spec:
         - containerPort: 80
         envFrom:
         - secretRef:
-            name: azure-secrets
+            name: azure-secrets-client
       nodeSelector:
         agentpool: userpool3

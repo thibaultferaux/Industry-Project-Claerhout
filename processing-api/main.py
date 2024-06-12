@@ -42,12 +42,13 @@ def email(job):
     template = env.get_template('email.html')
     to_email = job["email"]
     logging.info(f"Sending email from {username} to {to_email}")
+    logging.info(f"JOB: {job}")
     subject = 'Resultaten Roof Radar'
-    latitude = job["latitude"]
-    longitude = job["longitude"]
+    latitude = job["coordinates"][0]
+    longitude = job["coordinates"][1]
     azureMapsKey = os.getenv('AZURE_MAPS_KEY')
-    response = requests.get(url)
     url = f"https://atlas.microsoft.com/search/address/reverse/json?api-version=1.0&subscription-key={azureMapsKey}&language=nl-BE&query={latitude},{longitude}"
+    response = requests.get(url)
     # Check if the request was successful
     if response.status_code == 200:
         # Parse the response JSON
@@ -56,7 +57,7 @@ def email(job):
         # Check if there are any addresses in the response
         if "addresses" in data and len(data["addresses"]) > 0:
             # Extract the municipality
-            municipality = data["addresses"][0]["address"].get("municipality", "No municipality found")
+            municipality = data["addresses"][0]["address"].get("municipality", "niet gevonden")
             print(f"Municipality: {municipality}")
         else:
             print("No addresses found in the response.")
@@ -67,10 +68,10 @@ def email(job):
     template = env.get_template('email.html')
     data = {
         "regio": municipality,
-        "straal": f"{round(job['radius']/1000,1).replace('.', ',')}km",
+        "straal": f"{job['radius']/1000:.1f}".replace('.', ',') + "km",
         "aantal": job["totalFlatRoofs"],
-        "oppervlakte": f"{round(job['totalSurfaceAreaFlatRoofs'])}m²",
-        "omtrek": f"{round(job['totalCircumferenceFlatRoofs'])}m",
+        "oppervlakte": f"{round(job['totalSurfaceAreaFlatRoofs'])} m²",
+        "omtrek": f"{round(job['totalCircumferenceFlatRoofs'])} m",
         "ratio": f"{round(job['ratioFlatRoofs']*100)}%"
     }
     html_content = template.render(data)
