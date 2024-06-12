@@ -11,8 +11,10 @@ import asyncio
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -36,16 +38,47 @@ def meters_to_pixels(radius_meters, latitude, zoom_level):
     return int(radius_meters / meters_per_pixel)
 
 def email(job):
+    env = Environment(loader=FileSystemLoader('.'))
+    template = env.get_template('email.html')
     to_email = job["email"]
     logging.info(f"Sending email from {username} to {to_email}")
     subject = 'Resultaten Roof Radar'
-    body = f'hier zijn de resultaten van roof radar op de coordinaten: {job["coordinates"][0]},{job["coordinates"][1]} \n\n Aantal platte daken: {job["totalFlatRoofs"]} \n Aantal hellende daken: {job["totalSlopedRoofs"]} \n totale oppervlakte platte daken: {round(job["totalSurfaceAreaFlatRoofs"])}m² \n totale omtrek platte daken: {round(job["totalCircumferenceFlatRoofs"])}m \n ratio platte daken tov hellende daken: {round(job["ratioFlatRoofs"]*100,2)}%'
-    logging.debug(f"Email body: {body}")
-    msg = MIMEMultipart()
+    latitude = job["latitude"]
+    longitude = job["longitude"]
+    azureMapsKey = os.getenv('AZURE_MAPS_KEY')
+    response = requests.get(url)
+    url = f"https://atlas.microsoft.com/search/address/reverse/json?api-version=1.0&subscription-key={azureMapsKey}&language=nl-BE&query={latitude},{longitude}"
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the response JSON
+        data = response.json()
+
+        # Check if there are any addresses in the response
+        if "addresses" in data and len(data["addresses"]) > 0:
+            # Extract the municipality
+            municipality = data["addresses"][0]["address"].get("municipality", "No municipality found")
+            print(f"Municipality: {municipality}")
+        else:
+            print("No addresses found in the response.")
+    else:
+        print(f"Error: Unable to fetch data. Status code: {response.status_code}")
+
+    env = Environment(loader=FileSystemLoader('.'))
+    template = env.get_template('email.html')
+    data = {
+        "regio": municipality,
+        "straal": f"{round(job['radius']/1000,1)}km",
+        "aantal": job["totalFlatRoofs"],
+        "oppervlakte": f"{round(job['totalSurfaceAreaFlatRoofs'])}m²",
+        "omtrek": f"{round(job['totalCircumferenceFlatRoofs'])}m",
+        "ratio": f"{round(job['ratioFlatRoofs']*100,2)}%"
+    }
+    html_content = template.render(data)
+    msg = MIMEMultipart('alternative')
     msg['From'] = username
     msg['To'] = to_email
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(html_content, 'html'))
     logging.debug(f"Email message: {msg.as_string()}")
     try:
         server = smtplib.SMTP(smtp_server, smtp_port)
