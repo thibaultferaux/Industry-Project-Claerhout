@@ -1,6 +1,7 @@
 "use client";
 
 import Drawer from "@/components/Drawer";
+import ErrorScreen from "@/components/ErrorScreen";
 import InfoStep, { FormValues } from "@/components/InfoStep";
 import InteractiveMap from "@/components/InteractiveMap";
 import ModelLoading from "@/components/ModelLoading";
@@ -133,6 +134,9 @@ export default function Home() {
     if (job?.status === "completed") {
       return <ModelResults results={job} onClear={handleClear} />;
     }
+    if (job?.status === "error") {
+      return <ErrorScreen onClear={handleClear} />;
+    }
     return <ModelStatus status={job ? job.status : "generating"} />;
   };
 
@@ -146,10 +150,9 @@ export default function Home() {
   };
 
   // Show error message when mutation is error
-  // TODO: Create error component
   if (mutation.isError) {
     console.error(mutation.error);
-    return <div>Error</div>;
+    return <ErrorScreen onClear={handleClear} />;
   }
 
   return (
