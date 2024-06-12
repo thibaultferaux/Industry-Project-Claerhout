@@ -67,11 +67,11 @@ def email(job):
     template = env.get_template('email.html')
     data = {
         "regio": municipality,
-        "straal": f"{round(job['radius']/1000,1)}km",
+        "straal": f"{round(job['radius']/1000,1).replace('.', ',')}km",
         "aantal": job["totalFlatRoofs"],
         "oppervlakte": f"{round(job['totalSurfaceAreaFlatRoofs'])}m²",
         "omtrek": f"{round(job['totalCircumferenceFlatRoofs'])}m",
-        "ratio": f"{round(job['ratioFlatRoofs']*100,2)}%"
+        "ratio": f"{round(job['ratioFlatRoofs']*100)}%"
     }
     html_content = template.render(data)
     msg = MIMEMultipart('alternative')
