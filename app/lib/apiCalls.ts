@@ -3,11 +3,17 @@ import { Job, ModelRequest, ModelResponse } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const apiKeyHeader = {
+  headers: {
+    "x-api-key": process.env.API_KEY,
+  },
+};
+
 export const startModel = async (
   request: ModelRequest
 ): Promise<ModelResponse> => {
   try {
-    const response = await axios.post(API_URL + "detect-roofs/", request);
+    const response = await axios.post(API_URL + "detect-roofs/", request, apiKeyHeader);
     console.log("Start model response", response.data);
     return response.data;
   } catch (error) {
@@ -18,7 +24,7 @@ export const startModel = async (
 
 export const getJob = async (jobId: string): Promise<Job> => {
   try {
-    const response = await axios.get(`${API_URL}job-status/${jobId}`);
+    const response = await axios.get(`${API_URL}job-status/${jobId}`, apiKeyHeader);
     console.log("Get job response", response.data);
     return response.data;
   } catch (error) {
@@ -29,7 +35,7 @@ export const getJob = async (jobId: string): Promise<Job> => {
 
 export const getJobs = async (): Promise<Job[]> => {
   try {
-    const response = await axios.get(`${API_URL}jobs`);
+    const response = await axios.get(`${API_URL}jobs`, apiKeyHeader);
     console.log("Get jobs response", response.data);
     return response.data;
   } catch (error) {
