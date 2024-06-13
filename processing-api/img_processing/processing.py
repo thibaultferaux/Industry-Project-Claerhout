@@ -14,14 +14,14 @@ from img_processing.utils import pixels_to_meters, square_pixels_to_meters
 from azure_utils.blob_storage import upload_result_image
 
 # Load the YOLO model
-model = YOLO("./model/best.pt")
+model = YOLO("./model/best-v2.pt")
 
 async def handle_image_batch(image_batch: List[str], container_client: ContainerClient) -> Union[Dict[str, Any], GroupResults]:
     try:
         group_results = GroupResults()
 
         logging.info(f"Processing image batch: {image_batch}")
-        results = model(image_batch, retina_masks=True, stream=True)
+        results = model(image_batch, conf=0.5, retina_masks=True, agnostic_nms=True, stream=True)
 
         for result in results:
             image_array = result.plot()
