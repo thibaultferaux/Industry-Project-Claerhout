@@ -20,7 +20,7 @@ export default function Home() {
 
   // Location states
   const [location, setLocation] = useState<Location | null>(null);
-  const [scaleValue, setScaleValue] = useState<number>(2.5);
+  const [scaleValue, setScaleValue] = useState<number>(1.0);
   const [viewport, setViewport] = useState({
     latitude: 50.82307,
     longitude: 3.32653,
