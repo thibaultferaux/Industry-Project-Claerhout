@@ -30,5 +30,6 @@ def receive_job_from_queue(queue_client: QueueServiceClient):
 
 def delete_job_from_queue(queue_client: QueueServiceClient):
     message = queue_client.receive_message()
-    queue_client.delete_message(message)
+    if message:
+        queue_client.delete_message(message)
     return

@@ -102,10 +102,7 @@ async def process_queue(message: str, job_queue_client):
             urls = await fetch_urls_from_queue(queue_client)
             if not urls:
                 logging.info(f"No more images to process for job {job_id}")
-                try:
-                    delete_job_from_queue(job_queue_client)
-                except Exception as e:
-                    logging.log(f"Job {job_id} already deleted: {e}")
+                delete_job_from_queue(job_queue_client)
                 break
 
             # When urls are retrieved, process the images
