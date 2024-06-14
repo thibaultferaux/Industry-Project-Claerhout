@@ -44,5 +44,5 @@ def get_job(job_id:str) -> Job:
 
 def get_jobs() -> list[Job]:
     # get all jobs from the Cosmos DB
-    jobs = container.query_items(query="SELECT * FROM c WHERE c.status = 'completed'", enable_cross_partition_query=True)
+    jobs = container.query_items(query="SELECT * FROM c WHERE c.status = 'completed' ORDER BY c.createdAt DESC", enable_cross_partition_query=True)
     return [Job(**job) for job in jobs]
