@@ -125,7 +125,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             value={scaleValue}
             setValue={setScaleValue}
             min={0.1}
-            max={2.0}
+            max={4.0}
             className="w-full md:w-60 xl:w-80 transition-all duration-500 ease-out-quint"
           />
           <Button
