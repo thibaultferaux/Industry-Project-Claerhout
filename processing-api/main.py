@@ -103,7 +103,7 @@ async def process_queue(message: str, job_queue_client):
             if not urls:
                 logging.info(f"No more images to process for job {job_id}")
                 try:
-                    delete_job_from_queue(job_queue_client)
+                    delete_job_from_queue(job_queue_client, job_id)
                 except Exception as e:
                     logging.log(f"Job {job_id} already deleted: {e}")
                 break
@@ -123,7 +123,7 @@ async def process_queue(message: str, job_queue_client):
                 # Delete the queues
                 logging.info(f"Deleting queue {job_id}")
                 queue_client.delete_queue()
-                delete_job_from_queue(job_queue_client)
+                delete_job_from_queue(job_queue_client, job_id)
                 # Delete the blob container
                 # container_client.delete_container()
                 email(job)

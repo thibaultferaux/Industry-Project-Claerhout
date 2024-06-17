@@ -28,7 +28,9 @@ def receive_job_from_queue(queue_client: QueueServiceClient):
     message = queue_client.peek_messages(max_messages=1)
     return message
 
-def delete_job_from_queue(queue_client: QueueServiceClient):
+def delete_job_from_queue(queue_client: QueueServiceClient, job_id: str):
     message = queue_client.receive_message()
-    queue_client.delete_message(message)
+    logging.info(f"Deleting job with id: {job_id}")
+    if message.content == job_id:
+        queue_client.delete_message(message)
     return
