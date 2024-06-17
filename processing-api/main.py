@@ -3,7 +3,7 @@ import logging
 from time import sleep
 
 from azure_utils.storage_queue import get_queue_client, fetch_urls_from_queue, receive_job_from_queue, delete_job_from_queue
-from azure_utils.cosmos import update_job_results, set_job_status
+from azure_utils.cosmos import update_job_results, set_job_status, set_job_error
 from azure_utils.blob_storage import get_container_client
 from img_processing.processing import handle_image_batch
 import asyncio
@@ -133,6 +133,7 @@ async def process_queue(message: str, job_queue_client):
         logging.error(f"Error processing images for job {job_id}: {e}")
         # Update job status to failed
         await set_job_status(job_id, "error")
+        await set_job_error(job_id, str(e))
 
     return
 

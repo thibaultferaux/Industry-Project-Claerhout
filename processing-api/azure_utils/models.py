@@ -30,3 +30,9 @@ class Job(BaseModel):
             self.ratioFlatRoofs = self.totalSurfaceAreaFlatRoofs / (self.totalSurfaceAreaFlatRoofs + self.totalSurfaceAreaSlopedRoofs)
         else:
             self.ratioFlatRoofs = 0
+
+class JobError(BaseModel):
+    id: str
+    jobId: str
+    error: str
+    createdAt: datetime = datetime.now()
