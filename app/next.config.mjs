@@ -4,8 +4,7 @@ const nextConfig = {
     MAPBOX_TOKEN: process.env.MAPBOX_TOKEN,
     AZURE_MAPS_KEY: process.env.AZURE_MAPS_KEY,
     API_KEY: process.env.API_KEY
-  },
-  output: 'standalone'
+  }
 };
 
 export default nextConfig;
