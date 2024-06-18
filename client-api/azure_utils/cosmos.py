@@ -6,6 +6,7 @@ from azure_utils.models import Job
 import json
 from dotenv import load_dotenv
 import logging
+from datetime import datetime
 
 load_dotenv(override=True)
 
@@ -17,7 +18,7 @@ container = cosmos_client.get_database_client(database_name).get_container_clien
 
 async def create_job(coordinates:tuple[float, float], radius:int,email:str) -> Job:
     # create a new job
-    job = Job(id=str(uuid.uuid4()), status="generating", coordinates=coordinates, radius=radius,email=email)
+    job = Job(id=str(uuid.uuid4()), status="generating", coordinates=coordinates, radius=radius, email=email, createdAt=datetime.now())
 
     # create a new item
     job_json = job.model_dump_json()
